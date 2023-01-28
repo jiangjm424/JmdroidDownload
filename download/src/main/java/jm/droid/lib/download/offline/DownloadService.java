@@ -27,20 +27,17 @@ import android.os.IBinder;
 import android.os.Looper;
 
 import androidx.annotation.Nullable;
-import androidx.annotation.StringRes;
 
 import jm.droid.lib.download.scheduler.Requirements;
 import jm.droid.lib.download.scheduler.Requirements.RequirementFlags;
 import jm.droid.lib.download.scheduler.Scheduler;
 import jm.droid.lib.download.util.Assertions;
 import jm.droid.lib.download.util.Log;
-import jm.droid.lib.download.util.NotificationUtil;
 import jm.droid.lib.download.util.Util;
 
 import java.util.HashMap;
 import java.util.List;
 
-import jm.droid.lib.download.DownloadNotificationHelper;
 import jm.droid.lib.download.client.DownloadServiceNative;
 
 /** A {@link Service} for downloading media. */
@@ -53,7 +50,7 @@ public abstract class DownloadService extends Service {
    *   <li>{@link #KEY_FOREGROUND} - See {@link #KEY_FOREGROUND}.
    * </ul>
    */
-  public static final String ACTION_INIT =
+  private static final String ACTION_INIT =
       "jm.droid.lib.download.downloadService.action.INIT";
 
   /** Like {@link #ACTION_INIT}, but with {@link #KEY_FOREGROUND} implicitly set to true. */
@@ -71,7 +68,7 @@ public abstract class DownloadService extends Service {
    *   <li>{@link #KEY_FOREGROUND} - See {@link #KEY_FOREGROUND}.
    * </ul>
    */
-  public static final String ACTION_ADD_DOWNLOAD =
+  private static final String ACTION_ADD_DOWNLOAD =
       "jm.droid.lib.download.downloadService.action.ADD_DOWNLOAD";
 
   /**
@@ -82,7 +79,7 @@ public abstract class DownloadService extends Service {
    *   <li>{@link #KEY_FOREGROUND} - See {@link #KEY_FOREGROUND}.
    * </ul>
    */
-  public static final String ACTION_REMOVE_DOWNLOAD =
+  private static final String ACTION_REMOVE_DOWNLOAD =
       "jm.droid.lib.download.downloadService.action.REMOVE_DOWNLOAD";
 
   /**
@@ -92,7 +89,7 @@ public abstract class DownloadService extends Service {
    *   <li>{@link #KEY_FOREGROUND} - See {@link #KEY_FOREGROUND}.
    * </ul>
    */
-  public static final String ACTION_REMOVE_ALL_DOWNLOADS =
+  private static final String ACTION_REMOVE_ALL_DOWNLOADS =
       "jm.droid.lib.download.downloadService.action.REMOVE_ALL_DOWNLOADS";
 
   /**
@@ -102,7 +99,7 @@ public abstract class DownloadService extends Service {
    *   <li>{@link #KEY_FOREGROUND} - See {@link #KEY_FOREGROUND}.
    * </ul>
    */
-  public static final String ACTION_RESUME_DOWNLOADS =
+  private static final String ACTION_RESUME_DOWNLOADS =
       "jm.droid.lib.download.downloadService.action.RESUME_DOWNLOADS";
 
   /**
@@ -112,7 +109,7 @@ public abstract class DownloadService extends Service {
    *   <li>{@link #KEY_FOREGROUND} - See {@link #KEY_FOREGROUND}.
    * </ul>
    */
-  public static final String ACTION_PAUSE_DOWNLOADS =
+  private static final String ACTION_PAUSE_DOWNLOADS =
       "jm.droid.lib.download.downloadService.action.PAUSE_DOWNLOADS";
 
   /**
@@ -127,7 +124,7 @@ public abstract class DownloadService extends Service {
    *   <li>{@link #KEY_FOREGROUND} - See {@link #KEY_FOREGROUND}.
    * </ul>
    */
-  public static final String ACTION_SET_STOP_REASON =
+  private static final String ACTION_SET_STOP_REASON =
       "jm.droid.lib.download.downloadService.action.SET_STOP_REASON";
 
   /**
@@ -138,39 +135,36 @@ public abstract class DownloadService extends Service {
    *   <li>{@link #KEY_FOREGROUND} - See {@link #KEY_FOREGROUND}.
    * </ul>
    */
-  public static final String ACTION_SET_REQUIREMENTS =
+  private static final String ACTION_SET_REQUIREMENTS =
       "jm.droid.lib.download.downloadService.action.SET_REQUIREMENTS";
 
   /** Key for the {@link DownloadRequest} in {@link #ACTION_ADD_DOWNLOAD} intents. */
-  public static final String KEY_DOWNLOAD_REQUEST = "download_request";
+  private static final String KEY_DOWNLOAD_REQUEST = "download_request";
 
   /**
    * Key for the {@link String} content id in {@link #ACTION_SET_STOP_REASON} and {@link
    * #ACTION_REMOVE_DOWNLOAD} intents.
    */
-  public static final String KEY_CONTENT_ID = "content_id";
+  private static final String KEY_CONTENT_ID = "content_id";
 
   /**
    * Key for the integer stop reason in {@link #ACTION_SET_STOP_REASON} and {@link
    * #ACTION_ADD_DOWNLOAD} intents.
    */
-  public static final String KEY_STOP_REASON = "stop_reason";
+  private static final String KEY_STOP_REASON = "stop_reason";
 
   /** Key for the {@link Requirements} in {@link #ACTION_SET_REQUIREMENTS} intents. */
-  public static final String KEY_REQUIREMENTS = "requirements";
+  private static final String KEY_REQUIREMENTS = "requirements";
 
   /**
    * Key for a boolean extra that can be set on any intent to indicate whether the service was
    * started in the foreground. If set, the service is guaranteed to call {@link
    * #startForeground(int, Notification)}.
    */
-  public static final String KEY_FOREGROUND = "foreground";
+  private static final String KEY_FOREGROUND = "foreground";
 
   /** Invalid foreground notification id that can be used to run the service in the background. */
-  public static final int FOREGROUND_NOTIFICATION_ID_NONE = 0;
-
-  /** Default foreground notification update interval in milliseconds. */
-  public static final long DEFAULT_FOREGROUND_NOTIFICATION_UPDATE_INTERVAL = 1000;
+  private static final int FOREGROUND_NOTIFICATION_ID_NONE = 0;
 
   private static final String TAG = "DownloadService";
 
@@ -183,9 +177,6 @@ public abstract class DownloadService extends Service {
       downloadManagerHelpers = new HashMap<>();
 
   @Nullable private final ForegroundNotificationUpdater foregroundNotificationUpdater;
-  @Nullable private final String channelId;
-  @StringRes private final int channelNameResourceId;
-  @StringRes private final int channelDescriptionResourceId;
 
   private  DownloadManagerHelper downloadManagerHelper;
   private int lastStartId;
@@ -195,22 +186,6 @@ public abstract class DownloadService extends Service {
   private boolean isDestroyed;
 
   private DownloadServiceNative serviceNative;
-  /**
-   * Creates a DownloadService.
-   *
-   * <p>If {@code foregroundNotificationId} is {@link #FOREGROUND_NOTIFICATION_ID_NONE} then the
-   * service will only ever run in the background, and no foreground notification will be displayed.
-   *
-   * <p>If {@code foregroundNotificationId} is not {@link #FOREGROUND_NOTIFICATION_ID_NONE} then the
-   * service will run in the foreground. The foreground notification will be updated at least as
-   * often as the interval specified by {@link #DEFAULT_FOREGROUND_NOTIFICATION_UPDATE_INTERVAL}.
-   *
-   * @param foregroundNotificationId The notification id for the foreground notification, or {@link
-   *     #FOREGROUND_NOTIFICATION_ID_NONE} if the service should only ever run in the background.
-   */
-  protected DownloadService(int foregroundNotificationId) {
-    this(foregroundNotificationId, DEFAULT_FOREGROUND_NOTIFICATION_UPDATE_INTERVAL);
-  }
 
   /**
    * Creates a DownloadService.
@@ -222,72 +197,14 @@ public abstract class DownloadService extends Service {
    *     {@link #FOREGROUND_NOTIFICATION_ID_NONE}.
    */
   protected DownloadService(
-      int foregroundNotificationId, long foregroundNotificationUpdateInterval) {
-    this(
-        foregroundNotificationId,
-        foregroundNotificationUpdateInterval,
-        /* channelId= */ null,
-        /* channelNameResourceId= */ 0,
-        /* channelDescriptionResourceId= */ 0);
-  }
-
-  /**
-   * @deprecated Use {@link #DownloadService(int, long, String, int, int)}.
-   */
-  @Deprecated
-  protected DownloadService(
       int foregroundNotificationId,
-      long foregroundNotificationUpdateInterval,
-      @Nullable String channelId,
-      @StringRes int channelNameResourceId) {
-    this(
-        foregroundNotificationId,
-        foregroundNotificationUpdateInterval,
-        channelId,
-        channelNameResourceId,
-        /* channelDescriptionResourceId= */ 0);
-  }
-
-  /**
-   * Creates a DownloadService.
-   *
-   * @param foregroundNotificationId The notification id for the foreground notification, or {@link
-   *     #FOREGROUND_NOTIFICATION_ID_NONE} if the service should only ever run in the background.
-   * @param foregroundNotificationUpdateInterval The maximum interval between updates to the
-   *     foreground notification, in milliseconds. Ignored if {@code foregroundNotificationId} is
-   *     {@link #FOREGROUND_NOTIFICATION_ID_NONE}.
-   * @param channelId An id for a low priority notification channel to create, or {@code null} if
-   *     the app will take care of creating a notification channel if needed. If specified, must be
-   *     unique per package. The value may be truncated if it's too long. Ignored if {@code
-   *     foregroundNotificationId} is {@link #FOREGROUND_NOTIFICATION_ID_NONE}.
-   * @param channelNameResourceId A string resource identifier for the user visible name of the
-   *     notification channel. The recommended maximum length is 40 characters. The value may be
-   *     truncated if it's too long. Ignored if {@code channelId} is null or if {@code
-   *     foregroundNotificationId} is {@link #FOREGROUND_NOTIFICATION_ID_NONE}.
-   * @param channelDescriptionResourceId A string resource identifier for the user visible
-   *     description of the notification channel, or 0 if no description is provided. The
-   *     recommended maximum length is 300 characters. The value may be truncated if it is too long.
-   *     Ignored if {@code channelId} is null or if {@code foregroundNotificationId} is {@link
-   *     #FOREGROUND_NOTIFICATION_ID_NONE}.
-   */
-  protected DownloadService(
-      int foregroundNotificationId,
-      long foregroundNotificationUpdateInterval,
-      @Nullable String channelId,
-      @StringRes int channelNameResourceId,
-      @StringRes int channelDescriptionResourceId) {
+      long foregroundNotificationUpdateInterval) {
     if (foregroundNotificationId == FOREGROUND_NOTIFICATION_ID_NONE) {
       this.foregroundNotificationUpdater = null;
-      this.channelId = null;
-      this.channelNameResourceId = 0;
-      this.channelDescriptionResourceId = 0;
     } else {
       this.foregroundNotificationUpdater =
           new ForegroundNotificationUpdater(
               foregroundNotificationId, foregroundNotificationUpdateInterval);
-      this.channelId = channelId;
-      this.channelNameResourceId = channelNameResourceId;
-      this.channelDescriptionResourceId = channelDescriptionResourceId;
     }
   }
 
@@ -416,7 +333,7 @@ public abstract class DownloadService extends Service {
    * @param foreground Whether this intent will be used to start the service in the foreground.
    * @return The created intent.
    */
-  public static Intent buildSetRequirementsIntent(
+  private static Intent buildSetRequirementsIntent(
       Context context,
       Class<? extends DownloadService> clazz,
       Requirements requirements,
@@ -433,7 +350,7 @@ public abstract class DownloadService extends Service {
    * @param downloadRequest The request to be executed.
    * @param foreground Whether the service is started in the foreground.
    */
-  public static void sendAddDownload(
+  static void sendAddDownload(
       Context context,
       Class<? extends DownloadService> clazz,
       DownloadRequest downloadRequest,
@@ -452,7 +369,7 @@ public abstract class DownloadService extends Service {
    *     if the download should be started.
    * @param foreground Whether the service is started in the foreground.
    */
-  public static void sendAddDownload(
+  static void sendAddDownload(
       Context context,
       Class<? extends DownloadService> clazz,
       DownloadRequest downloadRequest,
@@ -470,7 +387,7 @@ public abstract class DownloadService extends Service {
    * @param id The content id.
    * @param foreground Whether the service is started in the foreground.
    */
-  public static void sendRemoveDownload(
+  static void sendRemoveDownload(
       Context context, Class<? extends DownloadService> clazz, String id, boolean foreground) {
     Intent intent = buildRemoveDownloadIntent(context, clazz, id, foreground);
     startService(context, intent, foreground);
@@ -483,7 +400,7 @@ public abstract class DownloadService extends Service {
    * @param clazz The concrete download service to be started.
    * @param foreground Whether the service is started in the foreground.
    */
-  public static void sendRemoveAllDownloads(
+  static void sendRemoveAllDownloads(
       Context context, Class<? extends DownloadService> clazz, boolean foreground) {
     Intent intent = buildRemoveAllDownloadsIntent(context, clazz, foreground);
     startService(context, intent, foreground);
@@ -496,7 +413,7 @@ public abstract class DownloadService extends Service {
    * @param clazz The concrete download service to be started.
    * @param foreground Whether the service is started in the foreground.
    */
-  public static void sendResumeDownloads(
+  static void sendResumeDownloads(
       Context context, Class<? extends DownloadService> clazz, boolean foreground) {
     Intent intent = buildResumeDownloadsIntent(context, clazz, foreground);
     startService(context, intent, foreground);
@@ -509,7 +426,7 @@ public abstract class DownloadService extends Service {
    * @param clazz The concrete download service to be started.
    * @param foreground Whether the service is started in the foreground.
    */
-  public static void sendPauseDownloads(
+  static void sendPauseDownloads(
       Context context, Class<? extends DownloadService> clazz, boolean foreground) {
     Intent intent = buildPauseDownloadsIntent(context, clazz, foreground);
     startService(context, intent, foreground);
@@ -525,7 +442,7 @@ public abstract class DownloadService extends Service {
    * @param stopReason An application defined stop reason.
    * @param foreground Whether the service is started in the foreground.
    */
-  public static void sendSetStopReason(
+  static void sendSetStopReason(
       Context context,
       Class<? extends DownloadService> clazz,
       @Nullable String id,
@@ -544,7 +461,7 @@ public abstract class DownloadService extends Service {
    * @param requirements A {@link Requirements}.
    * @param foreground Whether the service is started in the foreground.
    */
-  public static void sendSetRequirements(
+  static void sendSetRequirements(
       Context context,
       Class<? extends DownloadService> clazz,
       Requirements requirements,
@@ -597,7 +514,7 @@ public abstract class DownloadService extends Service {
       downloadManagerHelpers.put(clazz, downloadManagerHelper);
     }
     if (serviceNative == null) {
-        serviceNative = new DownloadServiceNative(this, downloadManagerHelper.downloadManager);
+        serviceNative = new DownloadServiceNative(downloadManagerHelper.downloadManager);
     }
     this.downloadManagerHelper = downloadManagerHelper;
     downloadManagerHelper.attachService(this);

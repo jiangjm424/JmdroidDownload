@@ -1,42 +1,31 @@
 package jm.droid.lib.download.client;
 
-import static jm.droid.lib.download.offline.Download.STATE_DOWNLOADING;
-import static jm.droid.lib.download.offline.Download.STATE_QUEUED;
-import static jm.droid.lib.download.offline.Download.STATE_REMOVING;
-import static jm.droid.lib.download.offline.Download.STATE_RESTARTING;
-import static jm.droid.lib.download.offline.Download.STATE_STOPPED;
-
 import android.os.RemoteException;
 
 import androidx.annotation.Nullable;
 
-import jm.droid.lib.download.offline.Download;
-import jm.droid.lib.download.offline.DownloadCursor;
-import jm.droid.lib.download.offline.DownloadManager;
-import jm.droid.lib.download.offline.DownloadRequest;
-import jm.droid.lib.download.offline.DownloadService;
-import jm.droid.lib.download.scheduler.Requirements;
-import jm.droid.lib.download.util.Log;
-import jm.droid.lib.download.util.Util;
-
 import java.io.IOException;
-import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import jm.droid.lib.download.IDownloadListener;
 import jm.droid.lib.download.IDownloadManager;
+import jm.droid.lib.download.offline.Download;
+import jm.droid.lib.download.offline.DownloadCursor;
+import jm.droid.lib.download.offline.DownloadManager;
+import jm.droid.lib.download.offline.DownloadRequest;
+import jm.droid.lib.download.scheduler.Requirements;
+import jm.droid.lib.download.util.Log;
+import jm.droid.lib.download.util.Util;
 
 public class DownloadServiceNative extends IDownloadManager.Stub implements DownloadManager.Listener {
     private final static String TAG = "DownloadServiceNative";
-    private final WeakReference<DownloadService> downloadService;
 
     private CopyOnWriteArrayList<IDownloadListener> listeners = new CopyOnWriteArrayList<>();
     private final DownloadManager downloadManager;
 
-    public DownloadServiceNative(DownloadService service, DownloadManager dm) {
-        downloadService = new WeakReference<>(service);
+    public DownloadServiceNative(DownloadManager dm) {
         downloadManager = dm;
         dm.addListener(this);
     }

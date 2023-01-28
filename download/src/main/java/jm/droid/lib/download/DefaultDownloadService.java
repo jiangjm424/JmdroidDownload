@@ -42,17 +42,13 @@ public class DefaultDownloadService extends DownloadService {
 
     private static final int JOB_ID = 1;
     private static final int FOREGROUND_NOTIFICATION_ID = 1;
-    private static final String DOWNLOAD_NOTIFICATION_CHANNEL_ID = "download_channel";
+    /** Default foreground notification update interval in milliseconds. */
+    private static final long DEFAULT_FOREGROUND_NOTIFICATION_UPDATE_INTERVAL = 1000;
 
     private INotificationHelper downloadNotificationHelper;
 
     public DefaultDownloadService() {
-        super(
-            FOREGROUND_NOTIFICATION_ID,
-            DEFAULT_FOREGROUND_NOTIFICATION_UPDATE_INTERVAL,
-            DOWNLOAD_NOTIFICATION_CHANNEL_ID,
-            R.string.exo_download_notification_channel_name,
-            /* channelDescriptionResourceId= */ 0);
+        super(FOREGROUND_NOTIFICATION_ID, DEFAULT_FOREGROUND_NOTIFICATION_UPDATE_INTERVAL);
     }
 
     public synchronized INotificationHelper getDownloadNotificationHelper(Context context) {

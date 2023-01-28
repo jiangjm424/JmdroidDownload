@@ -141,6 +141,7 @@ public final class Download implements Parcelable {
 
   /** The download isn't stopped. */
   public static final int STOP_REASON_NONE = 0;
+  public static final int STOP_REASON_UNKNOWN = 1;
 
   /** The download request. */
   public final DownloadRequest request;

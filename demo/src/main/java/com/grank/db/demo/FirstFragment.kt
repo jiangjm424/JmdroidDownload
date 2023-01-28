@@ -14,6 +14,7 @@ import com.grank.db.demo.databinding.FragmentFirstBinding
 import jm.droid.lib.download.DefaultDownloadService
 import jm.droid.lib.download.client.DownloadClient
 import jm.droid.lib.download.client.DownloadListenerImpl
+import jm.droid.lib.download.offline.DownloadHelper
 
 /**
  * A simple [Fragment] subclass as the default destination in the navigation.
@@ -47,50 +48,29 @@ class FirstFragment : Fragment() {
             findNavController().navigate(R.id.action_FirstFragment_to_SecondFragment)
         }
         binding.startDownload.setOnClickListener {
-            DownloadService.sendAddDownload(
-                requireContext(),
-                DefaultDownloadService::class.java,
-                DownloadRequest.Builder(Uri.parse(LIULISHUO_APK_URL+"/"+ (iii++))).build(),
-//                DownloadRequest.Builder("id", Uri.parse("uri://hhh.bbb.cc")).build(),
-                true
-            )
+            DownloadHelper.Builder().setCmd(DownloadHelper.CMD_ADD_DOWNLOAD).setForeground(true).setDownloadRequest(
+                DownloadRequest.Builder(Uri.parse(LIULISHUO_APK_URL+"/"+ (iii++))).build()
+            ).build().commit(requireContext())
         }
         binding.startIdDownload.setOnClickListener {
-            DownloadService.sendAddDownload(
-                requireContext(),
-                DefaultDownloadService::class.java,
-//                DownloadRequest.Builder("id${System.currentTimeMillis()}", Uri.parse("uri://hhh.bbb.cc")).build(),
+            DownloadHelper.Builder().setCmd(DownloadHelper.CMD_ADD_DOWNLOAD).setDownloadRequest(
                 DownloadRequest.Builder(Uri.parse(LIULISHUO_APK_URL)).setDisplayName("aaa.exe").setPath(requireContext().getExternalFilesDir(null)?.path+"/bbb.exe").build(),
-                true
-            )
+            ).build().commit(requireContext())
         }
         binding.stopIdDownload.setOnClickListener {
-            DownloadService.sendSetStopReason(
-                requireContext(),
-                DefaultDownloadService::class.java,
-                "6118eef38cee72b9199dbc0e16df942c",
-                1,
-                true
-            )
+            DownloadHelper.Builder().setCmd(DownloadHelper.CMD_SET_STOP_REASON).setTaskId("6118eef38cee72b9199dbc0e16df942c").build().commit(requireContext())
         }
         binding.stopDownload.setOnClickListener {
-            DownloadService.sendRemoveDownload(
-                requireContext(),
-                DefaultDownloadService::class.java,
-                "id${System.currentTimeMillis()}",
-                true
-            )
+            DownloadHelper.Builder().setCmd(DownloadHelper.CMD_REMOVE_DOWNLOAD).setTaskId("6118eef38cee72b9199dbc0e16df942c").build().commit(requireContext())
         }
         binding.pauseAllDownload.setOnClickListener {
-            DownloadService.sendPauseDownloads(requireContext(),
-                DefaultDownloadService::class.java, true)
+            DownloadHelper.Builder().setCmd(DownloadHelper.CMD_PAUSE_DOWNLOADS).build().commit(requireContext())
         }
         binding.removeAllDownload.setOnClickListener {
-            DownloadService.sendRemoveAllDownloads(requireContext(),
-                DefaultDownloadService::class.java, true)
+            DownloadHelper.Builder().setCmd(DownloadHelper.CMD_REMOVE_ALL_DOWNLOADS).build().commit(requireContext())
         }
         binding.resumeAllDownload.setOnClickListener {
-            DownloadService.sendResumeDownloads(requireContext(), DefaultDownloadService::class.java,true)
+            DownloadHelper.Builder().setCmd(DownloadHelper.CMD_RESUME_DOWNLOADS).build().commit(requireContext())
         }
 
         binding.bindDownloadService.setOnClickListener {
