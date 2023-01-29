@@ -23,6 +23,8 @@ import android.os.Parcelable;
 
 import androidx.annotation.Nullable;
 
+import org.jetbrains.annotations.NotNull;
+
 import jm.droid.lib.download.util.Assertions;
 import jm.droid.lib.download.util.DigestUtils;
 import jm.droid.lib.download.util.Util;
@@ -94,7 +96,7 @@ public final class DownloadRequest implements Parcelable {
   }
 
   /** The unique content id. */
-  public final String id;
+  public final @NotNull String id;
   /** The uri being downloaded. */
   public final Uri uri;
   /**
@@ -122,7 +124,7 @@ public final class DownloadRequest implements Parcelable {
    * @param data See {@link #data}.
    */
   private DownloadRequest(
-      String id,
+      @NotNull String id,
       Uri uri,
       @Nullable String displayName,
       List<StreamKey> streamKeys,

@@ -37,6 +37,7 @@ import jm.droid.lib.download.offline.Download.State;
 import jm.droid.lib.download.util.Assertions;
 import jm.droid.lib.download.util.Util;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -78,6 +79,7 @@ public final class DefaultDownloadIndex implements WritableDownloadIndex {
   private static final int COLUMN_INDEX_BYTES_DOWNLOADED = 13;
 
   private static final String WHERE_ID_EQUALS = COLUMN_ID + " = ?";
+  private static final String WHERE_PATH_EQUALS = COLUMN_PATH + " = ?";
   private static final String WHERE_STATE_IS_DOWNLOADING =
       COLUMN_STATE + " = " + Download.STATE_DOWNLOADING;
   private static final String WHERE_STATE_IS_TERMINAL =
@@ -184,6 +186,20 @@ public final class DefaultDownloadIndex implements WritableDownloadIndex {
       }
       cursor.moveToNext();
       return getDownloadForCurrentRow(cursor);
+    } catch (SQLiteException e) {
+      throw new DatabaseIOException(e);
+    }
+  }
+
+  @Override
+  public boolean checkPathExist(String path) throws IOException {
+    ensureInitialized();
+    try (Cursor cursor = getCursor(WHERE_PATH_EQUALS, new String[] {path})) {
+      if (cursor.getCount() == 0) {
+        return false;
+      }
+      cursor.moveToNext();
+      return true;
     } catch (SQLiteException e) {
       throw new DatabaseIOException(e);
     }

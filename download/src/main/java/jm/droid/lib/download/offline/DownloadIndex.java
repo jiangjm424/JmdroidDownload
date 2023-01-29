@@ -47,4 +47,6 @@ public interface DownloadIndex {
    * @throws IOException If an error occurs reading the state.
    */
   DownloadCursor getDownloads(@Download.State int... states) throws IOException;
+
+  boolean checkPathExist(String path) throws IOException;
 }

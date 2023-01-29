@@ -242,6 +242,7 @@ public final class DownloadManager {
     internalHandler =
         new InternalHandler(
             internalThread,
+            context,
             downloadIndex,
             downloaderFactory,
             mainHandler,
@@ -448,15 +449,6 @@ public final class DownloadManager {
   }
 
   /**
-   * Adds a download defined by the given request.
-   *
-   * @param request The download request.
-   */
-  public void addDownload(DownloadRequest request) {
-    addDownload(request, STOP_REASON_NONE);
-  }
-
-  /**
    * Adds a download defined by the given request and with the specified stop reason.
    *
    * @param request The download request.
@@ -470,28 +462,6 @@ public final class DownloadManager {
         .sendToTarget();
   }
 
-  public DownloadRequest checkDownloadRequest(DownloadRequest request, Context context) {
-      if (request.path != null) return request;
-      DownloadRequest.Builder builder = request.buildUpon();
-      String displayName = request.displayName;
-      if (displayName == null) {
-          displayName = findFileNameFromUrl(request.uri);
-          builder.setDisplayName(displayName);
-      }
-      String path = context.getExternalFilesDir(null)+ File.separator +displayName;
-      builder.setPath(path);
-      return builder.build();
-  }
-
-  private String findFileNameFromUrl(Uri url) {
-    if (url == null) {
-      return null;
-    }
-    final String path = url.getPath();
-    String fileName = path.substring(path.lastIndexOf('/') + 1);
-    if (fileName.isEmpty()) return null;
-    return fileName;
-  }
   /**
    * Cancels the download with the {@code id} and removes all downloaded data.
    *
@@ -705,6 +675,7 @@ public final class DownloadManager {
     public boolean released;
 
     private final HandlerThread thread;
+    private final Context context;
     private final WritableDownloadIndex downloadIndex;
     private final DownloaderFactory downloaderFactory;
     private final Handler mainHandler;
@@ -720,6 +691,7 @@ public final class DownloadManager {
 
     public InternalHandler(
         HandlerThread thread,
+        Context context,
         WritableDownloadIndex downloadIndex,
         DownloaderFactory downloaderFactory,
         Handler mainHandler,
@@ -728,6 +700,7 @@ public final class DownloadManager {
         boolean downloadsPaused) {
       super(thread.getLooper());
       this.thread = thread;
+      this.context = context;
       this.downloadIndex = downloadIndex;
       this.downloaderFactory = downloaderFactory;
       this.mainHandler = mainHandler;
@@ -898,7 +871,16 @@ public final class DownloadManager {
       this.minRetryCount = minRetryCount;
     }
 
-    private void addDownload(DownloadRequest request, int stopReason) {
+  /**
+   * 实际在将 {@Link DownloadRequest} request 加到任务列表前需要对任务进行预处理，
+   * 1 检查保存路径是不是已经存在，如果存在，则需要进行文件名修改
+   * 2 正在下载的任务忽略
+   * 3 其他情况合并或者直接加到任务队列中
+   * @param request
+   * @param stopReason
+   */
+    private void addDownload(DownloadRequest request1, int stopReason) {
+      DownloadRequest request = checkDownloadRequest(request1, context);
       @Nullable Download download = getDownload(request.id, /* loadFromIndex= */ true);
       if (download != null && (download.state == STATE_DOWNLOADING || download.state == STATE_COMPLETED)) return;
       long nowMs = System.currentTimeMillis();
@@ -918,6 +900,50 @@ public final class DownloadManager {
       syncTasks();
     }
 
+    private DownloadRequest checkDownloadRequest(DownloadRequest request, Context context) {
+      if (request.path != null && !checkDownloadPathExist(request.path)) {
+        return request;
+      }
+      return addPathDownloadRequest(request, context);
+    }
+
+    private DownloadRequest addPathDownloadRequest(DownloadRequest request, Context context) {
+      DownloadRequest.Builder builder = request.buildUpon();
+      String displayName = request.displayName;
+      if (displayName == null) {
+        displayName = findFileNameFromUrl(request.uri);
+        builder.setDisplayName(displayName);
+      }
+      String dir = context.getExternalFilesDir(null) + File.separator;
+      String path = dir + displayName;
+      if (checkDownloadPathExist(path)) {
+        displayName = request.id.substring(0,5)+"_"+displayName;
+        path = dir + displayName;
+        builder.setDisplayName(displayName);
+      }
+      builder.setPath(path);
+      return builder.build();
+    }
+    private boolean checkDownloadPathExist(String path) {
+      if (path == null) {
+        return false;
+      }
+      try {
+        if (downloadIndex.checkPathExist(path)) return true;
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+      return false;
+    }
+    private String findFileNameFromUrl(Uri url) {
+      if (url == null) {
+        return null;
+      }
+      final String path = url.getPath();
+      String fileName = path.substring(path.lastIndexOf('/') + 1);
+      if (fileName.isEmpty()) return null;
+      return fileName;
+    }
     private void removeDownload(String id) {
       @Nullable Download download = getDownload(id, /* loadFromIndex= */ true);
       if (download == null) {

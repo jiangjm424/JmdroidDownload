@@ -551,8 +551,7 @@ public abstract class DownloadService extends Service {
           Log.e(TAG, "Ignored ADD_DOWNLOAD: Missing " + KEY_DOWNLOAD_REQUEST + " extra");
         } else {
           int stopReason = intent.getIntExtra(KEY_STOP_REASON, Download.STOP_REASON_NONE);
-          DownloadRequest request = downloadManager.checkDownloadRequest(downloadRequest, this);
-          downloadManager.addDownload(request, stopReason);
+          downloadManager.addDownload(downloadRequest, stopReason);
         }
         break;
       case ACTION_REMOVE_DOWNLOAD:
