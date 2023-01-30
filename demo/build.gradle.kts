@@ -1,5 +1,5 @@
 
-import db.setupAppModule
+import jm.droid.compile.setupAppModule
 
 plugins {
     id("com.android.application")

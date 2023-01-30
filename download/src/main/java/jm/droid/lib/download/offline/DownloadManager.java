@@ -876,11 +876,11 @@ public final class DownloadManager {
    * 1 检查保存路径是不是已经存在，如果存在，则需要进行文件名修改
    * 2 正在下载的任务忽略
    * 3 其他情况合并或者直接加到任务队列中
-   * @param request
+   * @param req
    * @param stopReason
    */
-    private void addDownload(DownloadRequest request1, int stopReason) {
-      DownloadRequest request = checkDownloadRequest(request1, context);
+    private void addDownload(DownloadRequest req, int stopReason) {
+      DownloadRequest request = checkDownloadRequest(req, context);
       @Nullable Download download = getDownload(request.id, /* loadFromIndex= */ true);
       if (download != null && (download.state == STATE_DOWNLOADING || download.state == STATE_COMPLETED)) return;
       long nowMs = System.currentTimeMillis();

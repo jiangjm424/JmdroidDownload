@@ -1,4 +1,4 @@
-import db.setupLibraryModule
+import jm.droid.compile.setupLibraryModule
 
 plugins {
     id("com.android.library")

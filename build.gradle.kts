@@ -1,11 +1,9 @@
-import db.by
-import db.groupId
-import db.versionName
 import com.vanniktech.maven.publish.MavenPublishBaseExtension
-import com.vanniktech.maven.publish.SonatypeHost.DEFAULT
 import com.vanniktech.maven.publish.SonatypeHost.S01
+import jm.droid.compile.by
+import jm.droid.compile.groupId
+import jm.droid.compile.versionName
 import org.jetbrains.dokka.gradle.DokkaMultiModuleTask
-import org.jlleitschuh.gradle.ktlint.KtlintExtension
 
 buildscript {
     repositories {

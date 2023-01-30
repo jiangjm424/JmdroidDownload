@@ -1,4 +1,4 @@
-package db
+package jm.droid.compile
 
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.LibraryExtension
