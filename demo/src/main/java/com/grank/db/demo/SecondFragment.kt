@@ -55,16 +55,47 @@ class SecondFragment : Fragment() {
         vvv.downloads.observe(viewLifecycleOwner) {
             adapter.setdata(it)
         }
+        vvv.update.observe(viewLifecycleOwner) {
+            adapter.update(it)
+        }
+        vvv.progress.observe(viewLifecycleOwner) { (id, p) ->
+            adapter.progress(id, p);
+        }
     }
 
     private class VV(val itemBinding: LayoutItemBinding) : RecyclerView.ViewHolder(itemBinding.root)
     private class Ada() : RecyclerView.Adapter<VV>() {
         private val lll = mutableListOf<Download>()
-        fun setdata(l:List<Download>) {
+        fun setdata(l: List<Download>) {
             lll.clear()
             lll.addAll(l)
             notifyItemRangeChanged(0, l.size)
         }
+
+        private fun getIndex(id: String): Int {
+            for (i in 0 until lll.size) {
+                if (lll[i].request.id == id) return i
+            }
+            return -1
+        }
+
+        fun progress(id: String, percent: Float) {
+            val i = getIndex(id)
+            if (i > 0) {
+                val item = lll.get(i)
+                item.percentDownloaded = percent
+                notifyItemChanged(i)
+            }
+        }
+
+        fun update(download: Download) {
+            val i = getIndex(download.request.id)
+            if (i > 0) {
+                lll[i] = download
+                notifyItemChanged(i)
+            }
+        }
+
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VV {
             return VV(LayoutItemBinding.inflate(LayoutInflater.from(parent.context)))
         }
