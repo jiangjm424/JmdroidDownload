@@ -538,7 +538,6 @@ public abstract class DownloadService extends Service {
     }
     DownloadManager downloadManager =
         Assertions.checkNotNull(downloadManagerHelper).downloadManager;
-    Log.i(TAG, "action:"+intentAction);
     switch (intentAction) {
       case ACTION_INIT:
       case ACTION_RESTART:
