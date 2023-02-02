@@ -173,6 +173,20 @@ public final class DownloadClient implements ServiceConnection {
                 downloadListeners.get(i).onProgress(request, percent);
             }
         }
+
+        @Override
+        public void onDownloadChanged(Download download) throws RemoteException {
+            for (int i = 0; i < downloadListeners.size(); i++) {
+                downloadListeners.get(i).onDownloadChanged(download);
+            }
+        }
+
+        @Override
+        public void onDownloadRemoved(Download download) throws RemoteException {
+            for (int i = 0; i < downloadListeners.size(); i++) {
+                downloadListeners.get(i).onDownloadRemoved(download);
+            }
+        }
     }
 
     public static @NotNull DownloadConfigFactory downloadConfigFactory = new DefaultDownloadConfigFactory();

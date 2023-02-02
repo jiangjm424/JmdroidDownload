@@ -5,8 +5,17 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.grank.db.demo.databinding.FragmentSecondBinding
+import com.grank.db.demo.databinding.LayoutItemBinding
+import jm.droid.lib.download.client.DownloadClient
+import jm.droid.lib.download.client.DownloadListenerImpl
+import jm.droid.lib.download.offline.Download
+import jm.droid.lib.download.offline.DownloadRequest
+import jm.droid.lib.download.util.Log
 
 /**
  * A simple [Fragment] subclass as the second destination in the navigation.
@@ -19,6 +28,8 @@ class SecondFragment : Fragment() {
     // onDestroyView.
     private val binding get() = _binding!!
 
+    private val vvv by viewModels<SecondRemodel>()
+    private val adapter by lazy { Ada() }
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -35,6 +46,41 @@ class SecondFragment : Fragment() {
         binding.buttonSecond.setOnClickListener {
             findNavController().navigate(R.id.action_SecondFragment_to_FirstFragment)
         }
+        binding.buttonFresh.setOnClickListener {
+            vvv.aaa()
+        }
+        binding.listDownload.layoutManager =
+            LinearLayoutManager(requireContext(), LinearLayoutManager.VERTICAL, false)
+        binding.listDownload.adapter = adapter
+        vvv.downloads.observe(viewLifecycleOwner) {
+            adapter.setdata(it)
+        }
+    }
+
+    private class VV(val itemBinding: LayoutItemBinding) : RecyclerView.ViewHolder(itemBinding.root)
+    private class Ada() : RecyclerView.Adapter<VV>() {
+        private val lll = mutableListOf<Download>()
+        fun setdata(l:List<Download>) {
+            lll.clear()
+            lll.addAll(l)
+            notifyItemRangeChanged(0, l.size)
+        }
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VV {
+            return VV(LayoutItemBinding.inflate(LayoutInflater.from(parent.context)))
+        }
+
+        override fun onBindViewHolder(holder: VV, position: Int) {
+            val item = lll.get(position)
+            holder.itemBinding.displayName.text = item.request.displayName
+            holder.itemBinding.downladId.text = item.request.id
+            holder.itemBinding.process.text = item.bytesDownloaded.toString()
+            holder.itemBinding.state.text = item.state.toString()
+        }
+
+        override fun getItemCount(): Int {
+            return lll.size
+        }
+
     }
 
     override fun onDestroyView() {
