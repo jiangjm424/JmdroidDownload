@@ -536,6 +536,7 @@ public abstract class DownloadService extends Service {
     if (intentAction == null) {
       intentAction = ACTION_INIT;
     }
+    Log.i("jiang","action:"+intentAction);
     DownloadManager downloadManager =
         Assertions.checkNotNull(downloadManagerHelper).downloadManager;
     switch (intentAction) {

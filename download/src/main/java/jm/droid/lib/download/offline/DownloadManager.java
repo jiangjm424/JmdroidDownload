@@ -881,13 +881,13 @@ public final class DownloadManager {
    * @param stopReason
    */
     private void addDownload(DownloadRequest req, int stopReason) {
-      DownloadRequest request = checkDownloadRequest(req, context);
-      @Nullable Download download = getDownload(request.id, /* loadFromIndex= */ true);
+      @Nullable Download download = getDownload(req.id, /* loadFromIndex= */ true);
       if (download != null && (download.state == STATE_DOWNLOADING || download.state == STATE_COMPLETED)) return;
       long nowMs = System.currentTimeMillis();
       if (download != null) {
-        putDownload(mergeRequest(download, request, stopReason, nowMs));
+        putDownload(mergeRequest(download, req, stopReason, nowMs));
       } else {
+        DownloadRequest request = checkDownloadRequest(req, context);
         putDownload(
             new Download(
                 request,

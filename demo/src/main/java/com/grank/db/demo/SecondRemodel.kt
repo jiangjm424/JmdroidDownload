@@ -20,12 +20,12 @@ class SecondRemodel(application: Application) : AndroidViewModel(application) {
     private val lll = object : DownloadListenerImpl {
         override fun onProgress(request: DownloadRequest, percent: Float) {
             Log.i(TAG,"onProgress: id:${request.id} percent:$percent")
-            progress.postValue(Pair(request.id, percent))
+            progress.value = (Pair(request.id, percent))
         }
 
         override fun onDownloadChanged(download: Download) {
             Log.i(TAG,"changed:${download.request.id} state:${download.state}")
-            update.postValue(download)
+            update.value = (download)
         }
 
         override fun onDownloadRemoved(download: Download) {

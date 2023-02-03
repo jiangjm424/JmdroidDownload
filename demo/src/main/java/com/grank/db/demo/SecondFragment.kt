@@ -14,6 +14,7 @@ import com.grank.db.demo.databinding.LayoutItemBinding
 import jm.droid.lib.download.client.DownloadClient
 import jm.droid.lib.download.client.DownloadListenerImpl
 import jm.droid.lib.download.offline.Download
+import jm.droid.lib.download.offline.DownloadHelper
 import jm.droid.lib.download.offline.DownloadRequest
 import jm.droid.lib.download.util.Log
 
@@ -49,9 +50,12 @@ class SecondFragment : Fragment() {
         binding.buttonFresh.setOnClickListener {
             vvv.aaa()
         }
-        binding.listDownload.layoutManager =
-            LinearLayoutManager(requireContext(), LinearLayoutManager.VERTICAL, false)
-        binding.listDownload.adapter = adapter
+        binding.listDownload.apply {
+            layoutManager =
+                LinearLayoutManager(requireContext(), LinearLayoutManager.VERTICAL, false)
+            this.adapter = this@SecondFragment.adapter
+            itemAnimator = null
+        }
         vvv.downloads.observe(viewLifecycleOwner) {
             adapter.setdata(it)
         }
@@ -59,7 +63,7 @@ class SecondFragment : Fragment() {
             adapter.update(it)
         }
         vvv.progress.observe(viewLifecycleOwner) { (id, p) ->
-            adapter.progress(id, p);
+            adapter.progress(id, p)
         }
     }
 
@@ -81,7 +85,8 @@ class SecondFragment : Fragment() {
 
         fun progress(id: String, percent: Float) {
             val i = getIndex(id)
-            if (i > 0) {
+            Log.i("jiang3","adapter progress: $id, percent: $percent, found : $i")
+            if (i >= 0) {
                 val item = lll.get(i)
                 item.percentDownloaded = percent
                 notifyItemChanged(i)
@@ -90,7 +95,8 @@ class SecondFragment : Fragment() {
 
         fun update(download: Download) {
             val i = getIndex(download.request.id)
-            if (i > 0) {
+            Log.i("jiang3","adapter progress: ${download.request.id},  found : $i")
+            if (i >= 0) {
                 lll[i] = download
                 notifyItemChanged(i)
             }
@@ -100,12 +106,24 @@ class SecondFragment : Fragment() {
             return VV(LayoutItemBinding.inflate(LayoutInflater.from(parent.context)))
         }
 
+        override fun onBindViewHolder(holder: VV, position: Int, payloads: MutableList<Any>) {
+            super.onBindViewHolder(holder, position, payloads)
+        }
         override fun onBindViewHolder(holder: VV, position: Int) {
             val item = lll.get(position)
             holder.itemBinding.displayName.text = item.request.displayName
             holder.itemBinding.downladId.text = item.request.id
             holder.itemBinding.process.text = item.bytesDownloaded.toString()
             holder.itemBinding.state.text = item.state.toString()
+            holder.itemBinding.btnPauseStart.text = if (item.state == Download.STATE_DOWNLOADING) "pause" else "start"
+            holder.itemBinding.btnPauseStart.setOnClickListener {
+                if (item.state == Download.STATE_COMPLETED) return@setOnClickListener
+                if (item.state != Download.STATE_DOWNLOADING) {
+                    DownloadHelper.Builder().setCmd(DownloadHelper.CMD_RESUME_DOWNLOAD).setDownloadRequest(item.request).build().commit(holder.itemBinding.root.context)
+                }else{
+                    DownloadHelper.Builder().setCmd(DownloadHelper.CMD_PAUSE_DOWNLOAD).setTaskId(item.request.id).build().commit(holder.itemBinding.root.context)
+                }
+            }
         }
 
         override fun getItemCount(): Int {
