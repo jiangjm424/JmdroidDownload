@@ -196,7 +196,7 @@ public final class DownloadRequest implements Parcelable {
     return new DownloadRequest(
         id,
         uri,
-        newRequest.displayName,
+        displayName,
         mergedKeys,
         path,
         newRequest.data);

@@ -64,6 +64,7 @@ public class DataAdhesives {
             .setPath(download.request.path)
             .setPosition(download.getBytesDownloaded())
             .setLength(download.contentLength)
+            .setHttpBody(download.request.data)
             .build();
         bytesCached = download.getBytesDownloaded();
         contentLength = download.contentLength;

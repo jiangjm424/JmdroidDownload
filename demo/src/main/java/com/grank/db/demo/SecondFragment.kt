@@ -7,6 +7,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.grank.db.demo.databinding.FragmentSecondBinding
@@ -54,7 +55,8 @@ class SecondFragment : Fragment() {
             layoutManager =
                 LinearLayoutManager(requireContext(), LinearLayoutManager.VERTICAL, false)
             this.adapter = this@SecondFragment.adapter
-            itemAnimator = null
+//            itemAnimator = null
+            (itemAnimator as? DefaultItemAnimator)?.supportsChangeAnimations = false
         }
         vvv.downloads.observe(viewLifecycleOwner) {
             adapter.setdata(it)
