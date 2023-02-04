@@ -6,11 +6,13 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.media.browse.MediaBrowser;
 import android.os.IBinder;
 import android.os.RemoteException;
 
 import androidx.annotation.IntDef;
 import androidx.annotation.MainThread;
+import androidx.annotation.Nullable;
 
 import jm.droid.lib.download.DefaultDownloadConfigFactory;
 import jm.droid.lib.download.offline.Download;
@@ -61,7 +63,13 @@ public final class DownloadClient implements ServiceConnection {
     private DownloadListenerDefaultBinder downloadBinder = null;
     private CopyOnWriteArrayList<DownloadListenerImpl> downloadListeners = new CopyOnWriteArrayList<>();
 
+    private final @Nullable ConnectionCallback mCallback;
+
     public DownloadClient(@NotNull Context context) {
+        this(context, null);
+    }
+    public DownloadClient(@NotNull Context context, @Nullable ConnectionCallback callback) {
+        mCallback = callback;
         if (context.getApplicationContext() != null)
             mContext = context.getApplicationContext();
         else
@@ -88,6 +96,7 @@ public final class DownloadClient implements ServiceConnection {
             proxy = null;
             mState = STATE_DISCONNECTED;
             mContext.unbindService(this);
+            if(mCallback != null) mCallback.onConnectionSuspended();
         }
         if (!downloadListeners.isEmpty()) {
             downloadListeners.clear();
@@ -95,14 +104,6 @@ public final class DownloadClient implements ServiceConnection {
                 proxy.removeDownloadListener(downloadBinder);
             }
         }
-    }
-
-    /**
-     * proxy service native fun
-     */
-    public void basicTypes() throws RemoteException {
-        if (checkNoProxy()) return;
-        proxy.basicTypes(2, 3L, false, 4.4f, 5.5, "sss");
     }
 
     public void registerDownloadListener(@NotNull DownloadListenerImpl ll) throws RemoteException {
@@ -124,9 +125,9 @@ public final class DownloadClient implements ServiceConnection {
         }
     }
 
-    public List<Download> getDownloadInfos() throws RemoteException {
+    public List<Download> getDownloads() throws RemoteException {
         if (checkNoProxy()) return new ArrayList<>();
-        List<Download> list = proxy.getDownloadInfos();
+        List<Download> list = proxy.getDownloads();
         Log.i(TAG, "getDownload size : " + list.size());
         return list;
     }
@@ -144,6 +145,7 @@ public final class DownloadClient implements ServiceConnection {
         proxy = p;
         mState = STATE_CONNECTED;
         Log.i(TAG, "onConnected");
+        if(mCallback != null) mCallback.onConnected();
     }
 
     @Override
@@ -186,6 +188,23 @@ public final class DownloadClient implements ServiceConnection {
             for (int i = 0; i < downloadListeners.size(); i++) {
                 downloadListeners.get(i).onDownloadRemoved(download);
             }
+        }
+    }
+
+    /**
+     * Callbacks for connection related events.
+     */
+    public interface ConnectionCallback {
+        /**
+         * Invoked after {@link MediaBrowser#connect()} when the request has successfully completed.
+         */
+        default void onConnected() {
+        }
+
+        /**
+         * Invoked when the client is disconnected from the download service.
+         */
+        default void onConnectionSuspended() {
         }
     }
 

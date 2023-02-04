@@ -36,11 +36,6 @@ public class DownloadServiceNative extends IDownloadManager.Stub implements Down
     }
     //IDownloadManager.Stub
     @Override
-    public void basicTypes(int anInt, long aLong, boolean aBoolean, float aFloat, double aDouble, String aString) throws RemoteException {
-        Log.i(TAG, "basicTypes");
-    }
-
-    @Override
     public void addDownloadListener(IDownloadListener listener) throws RemoteException {
         listeners.add(listener);
     }
@@ -51,7 +46,7 @@ public class DownloadServiceNative extends IDownloadManager.Stub implements Down
     }
 
     @Override
-    public List<Download> getDownloadInfos() throws RemoteException {
+    public List<Download> getDownloads() throws RemoteException {
         DownloadCursor cursor = null;
         List<Download> downloads = new ArrayList<>();
         try {

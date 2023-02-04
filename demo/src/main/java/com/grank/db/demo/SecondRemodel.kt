@@ -3,28 +3,35 @@ package com.grank.db.demo
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.liveData
+import androidx.lifecycle.Transformations
 import jm.droid.lib.download.client.DownloadClient
 import jm.droid.lib.download.client.DownloadListenerImpl
 import jm.droid.lib.download.offline.Download
 import jm.droid.lib.download.offline.DownloadRequest
 import jm.droid.lib.download.util.Log
 
-class SecondRemodel(application: Application) : AndroidViewModel(application) {
-    private val download by lazy { DownloadClient(application) }
+class SecondRemodel(application: Application) : AndroidViewModel(application),
+    DownloadClient.ConnectionCallback {
     private val TAG = "jiang2"
+    private val download by lazy { DownloadClient(application, this) }
     private val _downloads = mutableListOf<Download>()
-    val downloads = MutableLiveData<List<Download>>()
-    val progress = MutableLiveData<Pair<String,Float>>()
+    private val _connected = MutableLiveData(false)
+
+    //    val downloads = MutableLiveData<List<Download>>()
+    val downloads = Transformations.map(_connected) {
+        Log.i(TAG,"connected:$it")
+        if (it) download.downloads else emptyList()
+    }
+    val progress = MutableLiveData<Pair<String, Float>>()
     val update = MutableLiveData<Download>()
     private val lll = object : DownloadListenerImpl {
         override fun onProgress(request: DownloadRequest, percent: Float) {
-            Log.i(TAG,"onProgress: id:${request.id} percent:$percent")
+            Log.i(TAG, "onProgress: id:${request.id} percent:$percent")
             progress.value = (Pair(request.id, percent))
         }
 
         override fun onDownloadChanged(download: Download) {
-            Log.i(TAG,"changed:${download.request.id} state:${download.state}")
+            Log.i(TAG, "changed:${download.request.id} state:${download.state}")
             update.value = (download)
         }
 
@@ -35,19 +42,32 @@ class SecondRemodel(application: Application) : AndroidViewModel(application) {
     }
 
     fun aaa() {
-        downloads.value = download.downloadInfos
-        download.registerDownloadListener(lll)
+//        downloads.value = download.downloads
+//        download.registerDownloadListener(lll)
     }
+
     init {
         download.connect()
-        val a = download.downloadInfos
-        _downloads.addAll(a)
-        Log.i(TAG,"init gg:${a.size}")
-//        download.registerDownloadListener(lll)
+        Log.i(TAG,"second vm init")
+//        val a = download.downloads
+//        _downloads.addAll(a)
+//        Log.i(TAG, "init gg:${a.size}")
+        download.registerDownloadListener(lll)
+    }
+
+    override fun onConnected() {
+        super.onConnected()
+        _connected.value = true
+    }
+
+    override fun onConnectionSuspended() {
+        super.onConnectionSuspended()
+        _connected.value = false
     }
 
     override fun onCleared() {
         super.onCleared()
+        Log.i(TAG,"second vm onclear")
         download.unRegisterDownloadListener(lll)
     }
 }

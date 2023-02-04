@@ -8,10 +8,8 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import jm.droid.lib.download.offline.DownloadRequest
-import jm.droid.lib.download.offline.DownloadService
 import jm.droid.lib.download.util.Log
 import com.grank.db.demo.databinding.FragmentFirstBinding
-import jm.droid.lib.download.DefaultDownloadService
 import jm.droid.lib.download.client.DownloadClient
 import jm.droid.lib.download.client.DownloadListenerImpl
 import jm.droid.lib.download.offline.Download
@@ -81,7 +79,6 @@ class FirstFragment : Fragment() {
             downloadClient.disConnect()
         }
         binding.basicTypes.setOnClickListener {
-            downloadClient.basicTypes()
         }
         binding.addProgress.setOnClickListener {
             downloadClient.registerDownloadListener(ppp)
@@ -90,7 +87,7 @@ class FirstFragment : Fragment() {
             downloadClient.unRegisterDownloadListener(ppp)
         }
         binding.checkTaskInfo.setOnClickListener {
-            downloadClient.downloadInfos.forEach {
+            downloadClient.downloads.forEach {
                 Log.i("jiang","display name:${it.request.id}")
             }
         }
