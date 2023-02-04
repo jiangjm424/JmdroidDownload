@@ -671,6 +671,7 @@ public final class DownloadManager {
   private static final class InternalHandler extends Handler {
 
     private static final int UPDATE_PROGRESS_INTERVAL_MS = 5000;
+    private static final String DOT = ".";
 
     public boolean released;
 
@@ -880,13 +881,13 @@ public final class DownloadManager {
    * @param stopReason
    */
     private void addDownload(DownloadRequest req, int stopReason) {
-      DownloadRequest request = checkDownloadRequest(req, context);
-      @Nullable Download download = getDownload(request.id, /* loadFromIndex= */ true);
+      @Nullable Download download = getDownload(req.id, /* loadFromIndex= */ true);
       if (download != null && (download.state == STATE_DOWNLOADING || download.state == STATE_COMPLETED)) return;
       long nowMs = System.currentTimeMillis();
       if (download != null) {
-        putDownload(mergeRequest(download, request, stopReason, nowMs));
+        putDownload(mergeRequest(download, req, stopReason, nowMs));
       } else {
+        DownloadRequest request = checkDownloadRequest(req, context);
         putDownload(
             new Download(
                 request,
@@ -917,12 +918,23 @@ public final class DownloadManager {
       String dir = context.getExternalFilesDir(null) + File.separator;
       String path = dir + displayName;
       if (checkDownloadPathExist(path)) {
-        displayName = request.id.substring(0,5)+"_"+displayName;
+        displayName = rename(request.id, displayName);
         path = dir + displayName;
         builder.setDisplayName(displayName);
       }
       builder.setPath(path);
       return builder.build();
+    }
+
+    private String rename(String id, String old) {
+      int index = old.lastIndexOf(DOT);
+      String suffix = id.substring(0, 5);
+      if (index > 0) {
+          String s1 = old.substring(0, index);
+          String s2 = old.substring(index + 1);
+          return s1 + "_" + suffix + DOT + s2;
+      }
+      return old + "_" + suffix;
     }
     private boolean checkDownloadPathExist(String path) {
       if (path == null) {

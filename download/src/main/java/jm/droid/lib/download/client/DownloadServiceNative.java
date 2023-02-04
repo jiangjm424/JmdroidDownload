@@ -72,12 +72,22 @@ public class DownloadServiceNative extends IDownloadManager.Stub implements Down
     public void onDownloadChanged(DownloadManager downloadManager, Download download, @Nullable Exception finalException) {
         Log.i(TAG,"onDownloadChanged:"+download.state+" id:"+download.request.id);
         DownloadManager.Listener.super.onDownloadChanged(downloadManager, download, finalException);
+        try {
+            for (int i = 0; i < listeners.size(); i++) {
+                listeners.get(i).onDownloadChanged(download);
+            }
+        } catch (RemoteException ignored) {}
     }
 
     @Override
     public void onDownloadRemoved(DownloadManager downloadManager, Download download) {
         Log.i(TAG,"onDownloadRemoved:"+download.state+" id:"+download.request.id);
         DownloadManager.Listener.super.onDownloadRemoved(downloadManager, download);
+        try {
+            for (int i = 0; i < listeners.size(); i++) {
+                listeners.get(i).onDownloadRemoved(download);
+            }
+        } catch (RemoteException ignored) {}
     }
 
     @Override

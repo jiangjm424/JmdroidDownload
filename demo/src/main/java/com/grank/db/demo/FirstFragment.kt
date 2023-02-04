@@ -14,6 +14,7 @@ import com.grank.db.demo.databinding.FragmentFirstBinding
 import jm.droid.lib.download.DefaultDownloadService
 import jm.droid.lib.download.client.DownloadClient
 import jm.droid.lib.download.client.DownloadListenerImpl
+import jm.droid.lib.download.offline.Download
 import jm.droid.lib.download.offline.DownloadHelper
 
 /**
@@ -96,8 +97,19 @@ class FirstFragment : Fragment() {
     }
     private var iii = 0;
     private val downloadClient by lazy {  DownloadClient(requireContext()) }
-    private val ppp = DownloadListenerImpl{request, percent ->
-        Log.i("jiang","id:${request.id}, per:$percent")
+    private val ppp = object :DownloadListenerImpl{
+        override fun onProgress(request: DownloadRequest, percent: Float) {
+            Log.i("jiang","id:${request.id}, per:$percent")
+        }
+
+        override fun onDownloadChanged(download: Download) {
+
+        }
+
+        override fun onDownloadRemoved(download: Download) {
+            TODO("Not yet implemented")
+        }
+
     }
     override fun onDestroyView() {
         super.onDestroyView()

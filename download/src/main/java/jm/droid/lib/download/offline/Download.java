@@ -216,6 +216,10 @@ public final class Download implements Parcelable {
     return progress.bytesDownloaded;
   }
 
+  public void setBytesDownloaded(long downloaded) {
+    progress.bytesDownloaded = downloaded;
+    progress.percentDownloaded = downloaded * 100f/contentLength;
+  }
   /**
    * Returns the estimated download percentage, or {@link C#PERCENTAGE_UNSET} if no estimate is
    * available.
@@ -224,6 +228,10 @@ public final class Download implements Parcelable {
     return progress.percentDownloaded;
   }
 
+  public void setPercentDownloaded(Float percent) {
+      progress.percentDownloaded =percent;
+      progress.bytesDownloaded = (long) (percent * contentLength / 100);
+  }
   @Override
   public String toString() {
     return "Download{" +
