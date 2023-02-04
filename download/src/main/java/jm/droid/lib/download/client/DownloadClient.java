@@ -136,6 +136,18 @@ public final class DownloadClient implements ServiceConnection {
         return proxy == null;
     }
 
+    private void onConnected() {
+        if (mCallback != null) mCallback.onConnected();
+        if (!downloadListeners.isEmpty() && downloadBinder == null) {
+            DownloadListenerDefaultBinder binder = new DownloadListenerDefaultBinder();
+            downloadBinder = binder;
+            try {
+                proxy.addDownloadListener(binder);
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
+        }
+    }
     /**
      * ServiceConnection callback
      */
@@ -145,7 +157,7 @@ public final class DownloadClient implements ServiceConnection {
         proxy = p;
         mState = STATE_CONNECTED;
         Log.i(TAG, "onConnected");
-        if(mCallback != null) mCallback.onConnected();
+        onConnected();
     }
 
     @Override
