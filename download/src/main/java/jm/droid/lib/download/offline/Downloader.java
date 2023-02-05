@@ -40,8 +40,9 @@ public interface Downloader {
      * @param bytesDownloaded The number of bytes that have been downloaded.
      * @param percentDownloaded The percentage of the content that has been downloaded, or {@link
      *     C#PERCENTAGE_UNSET}.
+     * @param newCachedBytes the download request speed
      */
-    void onProgress(long contentLength, long bytesDownloaded, float percentDownloaded);
+    void onProgress(long contentLength, long bytesDownloaded, float percentDownloaded, long newCachedBytes);
   }
 
   /**

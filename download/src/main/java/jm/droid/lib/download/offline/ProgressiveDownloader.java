@@ -135,6 +135,6 @@ public final class ProgressiveDownloader implements Downloader {
             contentLength == C.LENGTH_UNSET || contentLength == 0
                 ? C.PERCENTAGE_UNSET
                 : ((bytesCached * 100f) / contentLength);
-        progressListener.onProgress(contentLength, bytesCached, percentDownloaded);
+        progressListener.onProgress(contentLength, bytesCached, percentDownloaded, newBytesCached);
     }
 }

@@ -182,9 +182,9 @@ public final class DownloadClient implements ServiceConnection {
      */
     private class DownloadListenerDefaultBinder extends IDownloadListener.Stub {
         @Override
-        public void onProgress(DownloadRequest request, float percent) throws RemoteException {
+        public void onProgress(DownloadRequest request, float percent, float downloadSpeed) throws RemoteException {
             for (int i = 0; i < downloadListeners.size(); i++) {
-                downloadListeners.get(i).onProgress(request, percent);
+                downloadListeners.get(i).onProgress(request, percent, downloadSpeed);
             }
         }
 

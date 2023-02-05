@@ -25,4 +25,8 @@ public class DownloadProgress {
 
   /** The percentage that has been downloaded, or {@link C#PERCENTAGE_UNSET} if unknown. */
   public volatile float percentDownloaded;
+  /**
+   * 下载速度
+   */
+  public volatile float speed;
 }

@@ -22,13 +22,13 @@ class SecondRemodel(application: Application) : AndroidViewModel(application),
         Log.i(TAG,"connected:$it")
         if (it) download.downloads else emptyList()
     }
-    val progress = MutableLiveData<Pair<String, Float>>()
+    val progress = MutableLiveData<Triple<String, Float,Float>>()
     val update = MutableLiveData<Download>()
     val remove = MutableLiveData<Download>()
     private val lll = object : DownloadListenerImpl {
-        override fun onProgress(request: DownloadRequest, percent: Float) {
+        override fun onProgress(request: DownloadRequest, percent: Float, speed:Float) {
             Log.i(TAG, "onProgress: id:${request.id} percent:$percent")
-            progress.value = (Pair(request.id, percent))
+            progress.value = (Triple(request.id, percent, speed))
         }
 
         override fun onDownloadChanged(download: Download) {

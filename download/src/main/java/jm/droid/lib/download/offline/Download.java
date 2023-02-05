@@ -228,9 +228,16 @@ public final class Download implements Parcelable {
     return progress.percentDownloaded;
   }
 
-  public void setPercentDownloaded(Float percent) {
+  public void setPercentDownloaded(float percent) {
       progress.percentDownloaded =percent;
       progress.bytesDownloaded = (long) (percent * contentLength / 100);
+  }
+
+  public void setDownloadSpeed(float speed) {
+      progress.speed = speed;
+  }
+  public float getDownloadSpeed() {
+      return progress.speed;
   }
   @Override
   public String toString() {

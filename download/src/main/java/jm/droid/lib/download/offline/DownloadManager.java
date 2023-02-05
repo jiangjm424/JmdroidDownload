@@ -143,7 +143,7 @@ public final class DownloadManager {
     default void onWaitingForRequirementsChanged(
         DownloadManager downloadManager, boolean waitingForRequirements) {}
 
-    default void onDownloadProgress(DownloadRequest request, float percent) {}
+    default void onDownloadProgress(DownloadRequest request, float percent, float downloadSpeed) {}
   }
 
   /** The default maximum number of parallel downloads. */
@@ -570,9 +570,9 @@ public final class DownloadManager {
       listener.onWaitingForRequirementsChanged(this, waitingForRequirements);
     }
   }
-  private void notifyDownloadRequestProgressUpdate(DownloadRequest request, float percent) {
+  private void notifyDownloadRequestProgressUpdate(DownloadRequest request, float percent, float downloadSpeed) {
     for (Listener listener : listeners) {
-      listener.onDownloadProgress(request, percent);
+      listener.onDownloadProgress(request, percent, downloadSpeed);
     }
   }
   // Main thread message handling.
@@ -594,7 +594,7 @@ public final class DownloadManager {
         break;
       case MSG_UPDATE_PROGRESS:
         Task task = (Task) message.obj;
-        notifyDownloadRequestProgressUpdate(task.request, task.downloadProgress.percentDownloaded);
+        notifyDownloadRequestProgressUpdate(task.request, task.downloadProgress.percentDownloaded, task.downloadSpeed);
         break;
       default:
         throw new IllegalStateException();
@@ -1378,6 +1378,8 @@ public final class DownloadManager {
     private static final AtomicInteger poolNumber = new AtomicInteger(1);
 
     private long progressInterval = 0;
+    private long bytesDownloadedInterval = 0;
+    private float downloadSpeed = 0f;
 
     private Task(
         Download download,
@@ -1454,7 +1456,7 @@ public final class DownloadManager {
     }
 
     @Override
-    public void onProgress(long contentLength, long bytesDownloaded, float percentDownloaded) {
+    public void onProgress(long contentLength, long bytesDownloaded, float percentDownloaded, long bytesNewCached) {
 
       downloadProgress.bytesDownloaded = bytesDownloaded;
       downloadProgress.percentDownloaded = percentDownloaded;
@@ -1471,9 +1473,12 @@ public final class DownloadManager {
               .sendToTarget();
       }
       long nowMs = System.currentTimeMillis();
+      bytesDownloadedInterval += bytesNewCached;
       if (nowMs - progressInterval > 500) {
-          internalHandler.obtainMessage(MSG_UPDATE_PROGRESS_UI,this).sendToTarget();
+          downloadSpeed = bytesDownloadedInterval*1000f / (nowMs - progressInterval);  //Bps
+          internalHandler.obtainMessage(MSG_UPDATE_PROGRESS_UI, this).sendToTarget();
           progressInterval = nowMs;
+          bytesDownloadedInterval = 0;
       }
     }
 

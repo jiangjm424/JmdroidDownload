@@ -115,10 +115,10 @@ public class DownloadServiceNative extends IDownloadManager.Stub implements Down
     }
 
     @Override
-    public void onDownloadProgress(DownloadRequest request, float percent) {
+    public void onDownloadProgress(DownloadRequest request, float percent, float downloadSpeed) {
         try {
             for (int i = 0; i < listeners.size(); i++) {
-                listeners.get(i).onProgress(request, percent);
+                listeners.get(i).onProgress(request, percent, downloadSpeed);
             }
         } catch (RemoteException ignored) {}
 

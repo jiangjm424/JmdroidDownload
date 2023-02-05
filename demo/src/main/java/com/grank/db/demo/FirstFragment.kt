@@ -95,8 +95,8 @@ class FirstFragment : Fragment() {
     private var iii = 0;
     private val downloadClient by lazy {  DownloadClient(requireContext()) }
     private val ppp = object :DownloadListenerImpl{
-        override fun onProgress(request: DownloadRequest, percent: Float) {
-            Log.i("jiang","id:${request.id}, per:$percent")
+        override fun onProgress(request: DownloadRequest, percent: Float, downloadSpeed:Float) {
+            Log.i("jiang","id:${request.id}, per:$percent, speed:$downloadSpeed")
         }
 
         override fun onDownloadChanged(download: Download) {

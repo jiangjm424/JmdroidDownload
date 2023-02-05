@@ -10,6 +10,7 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.db.view.extfuns.visible
 import com.grank.db.demo.databinding.FragmentSecondBinding
 import com.grank.db.demo.databinding.LayoutItemBinding
 import jm.droid.lib.download.client.DownloadClient
@@ -67,8 +68,8 @@ class SecondFragment : Fragment() {
         vvv.remove.observe(viewLifecycleOwner) {
             adapter.remove(it)
         }
-        vvv.progress.observe(viewLifecycleOwner) { (id, p) ->
-            adapter.progress(id, p)
+        vvv.progress.observe(viewLifecycleOwner) { (id, p, speed) ->
+            adapter.progress(id, p, speed)
         }
     }
 
@@ -88,12 +89,13 @@ class SecondFragment : Fragment() {
             return -1
         }
 
-        fun progress(id: String, percent: Float) {
+        fun progress(id: String, percent: Float, speed:Float) {
             val i = getIndex(id)
             Log.i("jiang3","adapter progress: $id, percent: $percent, found : $i")
             if (i >= 0) {
                 val item = lll.get(i)
                 item.percentDownloaded = percent
+                item.downloadSpeed = speed
                 notifyItemChanged(i)
             }
         }
@@ -121,12 +123,25 @@ class SecondFragment : Fragment() {
         override fun onBindViewHolder(holder: VV, position: Int, payloads: MutableList<Any>) {
             super.onBindViewHolder(holder, position, payloads)
         }
+        private val aa = 1024*1024
         override fun onBindViewHolder(holder: VV, position: Int) {
             val item = lll.get(position)
             holder.itemBinding.displayName.text = item.request.displayName
             holder.itemBinding.downladId.text = item.request.id
             holder.itemBinding.process.text = item.bytesDownloaded.toString()
             holder.itemBinding.state.text = item.state.toString()
+            if (item.state == Download.STATE_DOWNLOADING) {
+
+                val speed = if (item.downloadSpeed > aa) {
+                    String.format("%.2fMBps",item.downloadSpeed/aa)
+                } else {
+                    String.format("%.2fKBps",item.downloadSpeed/1024)
+                }
+                holder.itemBinding.speed.text = speed
+                holder.itemBinding.speed.visible = true
+            } else {
+                holder.itemBinding.speed.visible = false
+            }
             holder.itemBinding.btnPauseStart.text = if (item.state == Download.STATE_DOWNLOADING) "pause" else "start"
             holder.itemBinding.btnPauseStart.setOnClickListener {
                 if (item.state == Download.STATE_COMPLETED) return@setOnClickListener
