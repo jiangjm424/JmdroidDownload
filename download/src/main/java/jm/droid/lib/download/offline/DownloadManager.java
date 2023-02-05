@@ -150,8 +150,8 @@ public final class DownloadManager {
   public static final int DEFAULT_MAX_PARALLEL_DOWNLOADS = 3;
   /** The default minimum number of times a download must be retried before failing. */
   public static final int DEFAULT_MIN_RETRY_COUNT = 5;
-  /** The default requirement is that the device has network connectivity. */
-  public static final Requirements DEFAULT_REQUIREMENTS = new Requirements(Requirements.NETWORK);
+  /** The default requirement is that the device has network connectivity which is unmetered. */
+  public static final Requirements DEFAULT_REQUIREMENTS = new Requirements(Requirements.NETWORK_UNMETERED);
 
   // Messages posted to the main handler.
   private static final int MSG_INITIALIZED = 0;

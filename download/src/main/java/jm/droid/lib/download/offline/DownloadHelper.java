@@ -14,6 +14,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 import jm.droid.lib.download.DefaultDownloadService;
+import jm.droid.lib.download.scheduler.Requirements;
 import jm.droid.lib.download.util.Assertions;
 
 public class DownloadHelper {
@@ -29,9 +30,11 @@ public class DownloadHelper {
         CMD_REMOVE_ALL_DOWNLOADS,
         CMD_RESUME_DOWNLOADS,
         CMD_PAUSE_DOWNLOADS,
-        CMD_SET_STOP_REASON})
+        CMD_SET_STOP_REASON,
+        CMD_SET_REQUIREMENTS})
     public @interface DownloadCmd {
     }
+
     public static final int CMD_ADD_DOWNLOAD = 0;
     public static final int CMD_REMOVE_DOWNLOAD = 1;
     public static final int CMD_RESUME_DOWNLOAD = 2;
@@ -40,17 +43,22 @@ public class DownloadHelper {
     public static final int CMD_RESUME_DOWNLOADS = 5;
     public static final int CMD_PAUSE_DOWNLOADS = 6;
     public static final int CMD_SET_STOP_REASON = 7;
+    public static final int CMD_SET_REQUIREMENTS = 8;
 
     private final @DownloadCmd int cmd;
-    private final @Nullable DownloadRequest request;
-    private final @Nullable String taskId;
+    private final @Nullable
+    DownloadRequest request;
+    private final @Nullable
+    String taskId;
     private final boolean foreground;
+    private final Requirements requirements;
 
-    private DownloadHelper(@DownloadCmd int cmd, @Nullable DownloadRequest request, @Nullable String taskId, boolean foreground) {
+    private DownloadHelper(int cmd, @Nullable DownloadRequest request, @Nullable String taskId, boolean foreground, Requirements requirements) {
         this.cmd = cmd;
         this.request = request;
         this.taskId = taskId;
         this.foreground = foreground;
+        this.requirements = requirements;
     }
 
     public void commit(Context context) {
@@ -78,6 +86,9 @@ public class DownloadHelper {
             case CMD_PAUSE_DOWNLOADS:
                 DownloadService.sendPauseDownloads(context, DefaultDownloadService.class, foreground);
                 break;
+            case CMD_SET_REQUIREMENTS:
+                DownloadService.sendSetRequirements(context, DefaultDownloadService.class, requirements, foreground);
+                break;
             default:
                 break;
         }
@@ -94,6 +105,7 @@ public class DownloadHelper {
         private @Nullable
         String taskId;
         private boolean foreground = true;
+        private Requirements requirements = DownloadManager.DEFAULT_REQUIREMENTS;
 
         public Builder setCmd(@DownloadCmd int cmd) {
             this.cmd = cmd;
@@ -115,6 +127,11 @@ public class DownloadHelper {
             return this;
         }
 
+        public Builder setRequirements(Requirements requirements) {
+            this.requirements = requirements;
+            return this;
+        }
+
         public Builder() {
         }
 
@@ -123,12 +140,13 @@ public class DownloadHelper {
             request = helper.request;
             taskId = helper.taskId;
             foreground = helper.foreground;
+            requirements = helper.requirements;
         }
 
         public DownloadHelper build() {
             Assertions.checkArgument(!((cmd == CMD_ADD_DOWNLOAD || cmd == CMD_RESUME_DOWNLOAD) && request == null),
                 "CMD_ADD_DOWNLOAD or CMD_RESUME_DOWNLOAD must provide a request");
-            return new DownloadHelper(cmd, request, taskId, foreground);
+            return new DownloadHelper(cmd, request, taskId, foreground, requirements);
         }
     }
 }

@@ -37,6 +37,8 @@ import androidx.annotation.IntDef;
 import androidx.annotation.Nullable;
 
 import jm.droid.lib.download.util.Assertions;
+import jm.droid.lib.download.util.Log;
+import jm.droid.lib.download.util.NetworkState;
 import jm.droid.lib.download.util.Util;
 
 import java.lang.annotation.Documented;
@@ -164,18 +166,14 @@ public final class Requirements implements Parcelable {
     if (!isNetworkRequired()) {
       return 0;
     }
-
     ConnectivityManager connectivityManager =
-        (ConnectivityManager)
-            Assertions.checkNotNull(context.getSystemService(Context.CONNECTIVITY_SERVICE));
-    @Nullable NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
-    if (networkInfo == null
-        || !networkInfo.isConnected()
-        || !isInternetConnectivityValidated(connectivityManager)) {
+        (ConnectivityManager) Assertions.checkNotNull(context.getSystemService(Context.CONNECTIVITY_SERVICE));
+      NetworkState state = NetworkState.activeNetworkState(connectivityManager);
+    if (!state.isConnected || !state.isValidated) {
       return requirements & (NETWORK | NETWORK_UNMETERED);
     }
 
-    if (isUnmeteredNetworkRequired() && connectivityManager.isActiveNetworkMetered()) {
+    if (isUnmeteredNetworkRequired() && state.isMetered) {
       return NETWORK_UNMETERED;
     }
 
