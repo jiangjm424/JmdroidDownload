@@ -64,6 +64,9 @@ class SecondFragment : Fragment() {
         vvv.update.observe(viewLifecycleOwner) {
             adapter.update(it)
         }
+        vvv.remove.observe(viewLifecycleOwner) {
+            adapter.remove(it)
+        }
         vvv.progress.observe(viewLifecycleOwner) { (id, p) ->
             adapter.progress(id, p)
         }
@@ -104,8 +107,15 @@ class SecondFragment : Fragment() {
             }
         }
 
+        fun remove(download: Download) {
+            val i = getIndex(download.request.id)
+            if (i<0)return
+            lll.removeAt(i)
+            notifyItemRemoved(i)
+        }
+
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VV {
-            return VV(LayoutItemBinding.inflate(LayoutInflater.from(parent.context)))
+            return VV(LayoutItemBinding.inflate(LayoutInflater.from(parent.context), parent, false))
         }
 
         override fun onBindViewHolder(holder: VV, position: Int, payloads: MutableList<Any>) {
@@ -125,6 +135,9 @@ class SecondFragment : Fragment() {
                 }else{
                     DownloadHelper.Builder().setCmd(DownloadHelper.CMD_PAUSE_DOWNLOAD).setTaskId(item.request.id).build().commit(holder.itemBinding.root.context)
                 }
+            }
+            holder.itemBinding.btnDelete.setOnClickListener {
+                DownloadHelper.Builder().setCmd(DownloadHelper.CMD_REMOVE_DOWNLOAD).setTaskId(item.request.id).setDeleteFileWhenRemove(true).build().commit(holder.itemBinding.root.context)
             }
         }
 

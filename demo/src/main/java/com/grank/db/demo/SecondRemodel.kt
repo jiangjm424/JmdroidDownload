@@ -24,6 +24,7 @@ class SecondRemodel(application: Application) : AndroidViewModel(application),
     }
     val progress = MutableLiveData<Pair<String, Float>>()
     val update = MutableLiveData<Download>()
+    val remove = MutableLiveData<Download>()
     private val lll = object : DownloadListenerImpl {
         override fun onProgress(request: DownloadRequest, percent: Float) {
             Log.i(TAG, "onProgress: id:${request.id} percent:$percent")
@@ -37,6 +38,7 @@ class SecondRemodel(application: Application) : AndroidViewModel(application),
 
         override fun onDownloadRemoved(download: Download) {
             Log.i(TAG, "remove: ${download.request.id}")
+            remove.value = download
         }
 
     }

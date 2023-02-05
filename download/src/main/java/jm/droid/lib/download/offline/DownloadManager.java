@@ -467,15 +467,15 @@ public final class DownloadManager {
    *
    * @param id The unique content id of the download to be started.
    */
-  public void removeDownload(String id) {
+  public void removeDownload(String id, int delete) {
     pendingMessages++;
-    internalHandler.obtainMessage(MSG_REMOVE_DOWNLOAD, id).sendToTarget();
+    internalHandler.obtainMessage(MSG_REMOVE_DOWNLOAD, delete, 0, id).sendToTarget();
   }
 
   /** Cancels all pending downloads and removes all downloaded data. */
-  public void removeAllDownloads() {
+  public void removeAllDownloads(int delete) {
     pendingMessages++;
-    internalHandler.obtainMessage(MSG_REMOVE_ALL_DOWNLOADS).sendToTarget();
+    internalHandler.obtainMessage(MSG_REMOVE_ALL_DOWNLOADS, delete, 0, null).sendToTarget();
   }
 
   /**
@@ -748,10 +748,10 @@ public final class DownloadManager {
           break;
         case MSG_REMOVE_DOWNLOAD:
           id = (String) message.obj;
-          removeDownload(id);
+          removeDownload(id, message.arg1);
           break;
         case MSG_REMOVE_ALL_DOWNLOADS:
-          removeAllDownloads();
+          removeAllDownloads(message.arg1);
           break;
         case MSG_TASK_STOPPED:
           Task task = (Task) message.obj;
@@ -956,17 +956,18 @@ public final class DownloadManager {
       if (fileName.isEmpty()) return null;
       return fileName;
     }
-    private void removeDownload(String id) {
+    private void removeDownload(String id, int delete) {
       @Nullable Download download = getDownload(id, /* loadFromIndex= */ true);
       if (download == null) {
         Log.e(TAG, "Failed to remove nonexistent download: " + id);
         return;
       }
       putDownloadWithState(download, STATE_REMOVING, STOP_REASON_NONE);
+      if (delete != 0) deleteFile(download.request.path);
       syncTasks();
     }
 
-    private void removeAllDownloads() {
+    private void removeAllDownloads(int delete) {
       List<Download> terminalDownloads = new ArrayList<>();
       try (DownloadCursor cursor = downloadIndex.getDownloads(STATE_COMPLETED, STATE_FAILED)) {
         while (cursor.moveToNext()) {
@@ -995,9 +996,25 @@ public final class DownloadManager {
                 downloads.get(i), /* isRemove= */ false, updateList, /* finalException= */ null);
         mainHandler.obtainMessage(MSG_DOWNLOAD_UPDATE, update).sendToTarget();
       }
+      if (delete != 0) {
+        for (int i = 0; i < downloads.size(); i++) {
+          deleteFile(downloads.get(i).request.path);
+        }
+      }
       syncTasks();
     }
 
+    private void deleteFile(String path) {
+      try {
+        Log.i(TAG,"delete:"+path);
+        File f = new File(path);
+        if (f.exists()) f.delete();
+        File fTmp = new File(path+".tmp");
+        if (fTmp.exists()) fTmp.delete();
+      } catch (Exception ex) {
+        Log.w(TAG," delete file exception");
+      }
+    }
     private void release() {
       for (Task task : activeTasks.values()) {
         task.cancel(/* released= */ true);

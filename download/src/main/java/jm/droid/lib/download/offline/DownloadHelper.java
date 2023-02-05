@@ -51,13 +51,15 @@ public class DownloadHelper {
     private final @Nullable
     String taskId;
     private final boolean foreground;
+    private final boolean deleteFileWhenRemove;
     private final Requirements requirements;
 
-    private DownloadHelper(int cmd, @Nullable DownloadRequest request, @Nullable String taskId, boolean foreground, Requirements requirements) {
+    private DownloadHelper(int cmd, @Nullable DownloadRequest request, @Nullable String taskId, boolean foreground, boolean deleteFileWhenRemove, Requirements requirements) {
         this.cmd = cmd;
         this.request = request;
         this.taskId = taskId;
         this.foreground = foreground;
+        this.deleteFileWhenRemove = deleteFileWhenRemove;
         this.requirements = requirements;
     }
 
@@ -75,10 +77,10 @@ public class DownloadHelper {
                 break;
             case CMD_REMOVE_DOWNLOAD:
                 if (TextUtils.isEmpty(id) && request != null) id = request.id;
-                DownloadService.sendRemoveDownload(context, DefaultDownloadService.class, id, foreground);
+                DownloadService.sendRemoveDownload(context, DefaultDownloadService.class, id, foreground, deleteFileWhenRemove);
                 break;
             case CMD_REMOVE_ALL_DOWNLOADS:
-                DownloadService.sendRemoveAllDownloads(context, DefaultDownloadService.class, foreground);
+                DownloadService.sendRemoveAllDownloads(context, DefaultDownloadService.class, foreground, deleteFileWhenRemove);
                 break;
             case CMD_RESUME_DOWNLOADS:
                 DownloadService.sendResumeDownloads(context, DefaultDownloadService.class, foreground);
@@ -105,10 +107,16 @@ public class DownloadHelper {
         private @Nullable
         String taskId;
         private boolean foreground = true;
+        private boolean deleteFileWhenRemove = false;
         private Requirements requirements = DownloadManager.DEFAULT_REQUIREMENTS;
 
         public Builder setCmd(@DownloadCmd int cmd) {
             this.cmd = cmd;
+            return this;
+        }
+
+        public Builder setDeleteFileWhenRemove(boolean delete) {
+            this.deleteFileWhenRemove = delete;
             return this;
         }
 
@@ -135,7 +143,7 @@ public class DownloadHelper {
         public Builder() {
         }
 
-        /* package */Builder(DownloadHelper helper) {
+        /* package */ Builder(DownloadHelper helper) {
             cmd = helper.cmd;
             request = helper.request;
             taskId = helper.taskId;
@@ -146,7 +154,7 @@ public class DownloadHelper {
         public DownloadHelper build() {
             Assertions.checkArgument(!((cmd == CMD_ADD_DOWNLOAD || cmd == CMD_RESUME_DOWNLOAD) && request == null),
                 "CMD_ADD_DOWNLOAD or CMD_RESUME_DOWNLOAD must provide a request");
-            return new DownloadHelper(cmd, request, taskId, foreground, requirements);
+            return new DownloadHelper(cmd, request, taskId, foreground, deleteFileWhenRemove, requirements);
         }
     }
 }

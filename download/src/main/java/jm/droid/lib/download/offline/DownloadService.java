@@ -163,7 +163,14 @@ public abstract class DownloadService extends Service {
    */
   private static final String KEY_FOREGROUND = "foreground";
 
-  /** Invalid foreground notification id that can be used to run the service in the background. */
+  /**
+   * Key for a boolean extra that can be set on any intent to indicate whether the service was
+   * started in the foreground. If set, the service is guaranteed to call {@link
+   * #startForeground(int, Notification)}.
+   */
+  private static final String KEY_DELETE_FILE = "delete_file";
+
+    /** Invalid foreground notification id that can be used to run the service in the background. */
   private static final int FOREGROUND_NOTIFICATION_ID_NONE = 0;
 
   private static final String TAG = "DownloadService";
@@ -256,10 +263,11 @@ public abstract class DownloadService extends Service {
    * @param foreground Whether this intent will be used to start the service in the foreground.
    * @return The created intent.
    */
-  public static Intent buildRemoveDownloadIntent(
-      Context context, Class<? extends DownloadService> clazz, String id, boolean foreground) {
+  private static Intent buildRemoveDownloadIntent(
+      Context context, Class<? extends DownloadService> clazz, String id, boolean foreground, boolean deletefile) {
     return getIntent(context, clazz, ACTION_REMOVE_DOWNLOAD, foreground)
-        .putExtra(KEY_CONTENT_ID, id);
+        .putExtra(KEY_CONTENT_ID, id)
+        .putExtra(KEY_DELETE_FILE, deletefile);
   }
 
   /**
@@ -270,9 +278,10 @@ public abstract class DownloadService extends Service {
    * @param foreground Whether this intent will be used to start the service in the foreground.
    * @return The created intent.
    */
-  public static Intent buildRemoveAllDownloadsIntent(
-      Context context, Class<? extends DownloadService> clazz, boolean foreground) {
-    return getIntent(context, clazz, ACTION_REMOVE_ALL_DOWNLOADS, foreground);
+  private static Intent buildRemoveAllDownloadsIntent(
+      Context context, Class<? extends DownloadService> clazz, boolean foreground, boolean deletefile) {
+    return getIntent(context, clazz, ACTION_REMOVE_ALL_DOWNLOADS, foreground)
+        .putExtra(KEY_DELETE_FILE, deletefile);
   }
 
   /**
@@ -386,10 +395,11 @@ public abstract class DownloadService extends Service {
    * @param clazz The concrete download service to be started.
    * @param id The content id.
    * @param foreground Whether the service is started in the foreground.
+   * @param deletefile Whether delete the file which is downloading or has downloaded.
    */
   static void sendRemoveDownload(
-      Context context, Class<? extends DownloadService> clazz, String id, boolean foreground) {
-    Intent intent = buildRemoveDownloadIntent(context, clazz, id, foreground);
+      Context context, Class<? extends DownloadService> clazz, String id, boolean foreground, boolean deletefile) {
+    Intent intent = buildRemoveDownloadIntent(context, clazz, id, foreground, deletefile);
     startService(context, intent, foreground);
   }
 
@@ -399,10 +409,11 @@ public abstract class DownloadService extends Service {
    * @param context A {@link Context}.
    * @param clazz The concrete download service to be started.
    * @param foreground Whether the service is started in the foreground.
+   * @param deletefile Whether delete the file which is downloading or has downloaded.
    */
   static void sendRemoveAllDownloads(
-      Context context, Class<? extends DownloadService> clazz, boolean foreground) {
-    Intent intent = buildRemoveAllDownloadsIntent(context, clazz, foreground);
+      Context context, Class<? extends DownloadService> clazz, boolean foreground, boolean deletefile) {
+    Intent intent = buildRemoveAllDownloadsIntent(context, clazz, foreground, deletefile);
     startService(context, intent, foreground);
   }
 
@@ -526,9 +537,12 @@ public abstract class DownloadService extends Service {
     taskRemoved = false;
     @Nullable String intentAction = null;
     @Nullable String contentId = null;
+    int delete = 0;
     if (intent != null) {
       intentAction = intent.getAction();
       contentId = intent.getStringExtra(KEY_CONTENT_ID);
+      boolean bDel = intent.getBooleanExtra(KEY_DELETE_FILE, false);
+      delete = bDel ? 1 : 0;
       startedInForeground |=
           intent.getBooleanExtra(KEY_FOREGROUND, false) || ACTION_RESTART.equals(intentAction);
     }
@@ -558,11 +572,11 @@ public abstract class DownloadService extends Service {
         if (contentId == null) {
           Log.e(TAG, "Ignored REMOVE_DOWNLOAD: Missing " + KEY_CONTENT_ID + " extra");
         } else {
-          downloadManager.removeDownload(contentId);
+          downloadManager.removeDownload(contentId, delete);
         }
         break;
       case ACTION_REMOVE_ALL_DOWNLOADS:
-        downloadManager.removeAllDownloads();
+        downloadManager.removeAllDownloads(delete);
         break;
       case ACTION_RESUME_DOWNLOADS:
         downloadManager.resumeDownloads();
