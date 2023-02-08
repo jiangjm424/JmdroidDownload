@@ -7,6 +7,7 @@ import androidx.annotation.Nullable;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import jm.droid.lib.download.IDownloadListener;
@@ -22,7 +23,8 @@ import jm.droid.lib.download.util.Util;
 public class DownloadServiceNative extends IDownloadManager.Stub implements DownloadManager.Listener {
     private final static String TAG = "DownloadServiceNative";
 
-    private CopyOnWriteArrayList<IDownloadListener> listeners = new CopyOnWriteArrayList<>();
+    private final CopyOnWriteArrayList<IDownloadListener> listeners = new CopyOnWriteArrayList<>();
+    private final ConcurrentHashMap<String,IDownloadListener> specialListeners = new ConcurrentHashMap<>();
     private final DownloadManager downloadManager;
 
     public DownloadServiceNative(DownloadManager dm) {

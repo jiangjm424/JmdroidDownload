@@ -27,6 +27,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import jm.droid.lib.download.IDownloadListener;
@@ -61,7 +63,8 @@ public final class DownloadClient implements ServiceConnection {
     private IDownloadManager proxy;
 
     private DownloadListenerDefaultBinder downloadBinder = null;
-    private CopyOnWriteArrayList<DownloadListenerImpl> downloadListeners = new CopyOnWriteArrayList<>();
+    private final CopyOnWriteArrayList<DownloadListenerImpl> downloadListeners = new CopyOnWriteArrayList<>();
+    private final ConcurrentHashMap<String,IDownloadListener> specialListeners = new ConcurrentHashMap<>();
 
     private final @Nullable ConnectionCallback mCallback;
 
@@ -106,25 +109,52 @@ public final class DownloadClient implements ServiceConnection {
         }
     }
 
-    public void registerDownloadListener(@NotNull DownloadListenerImpl ll) throws RemoteException {
-        downloadListeners.add(ll);
+    public void registerDownloadListener(@NotNull DownloadListenerImpl listener) throws RemoteException {
+        downloadListeners.add(listener);
+        bindServerIfNeeded();
+    }
+
+    public void unRegisterDownloadListener(@NotNull DownloadListenerImpl listener) throws RemoteException {
+        boolean remove = downloadListeners.remove(listener);
+        unBindServerIfNeeded(remove);
+    }
+
+    public void subscribeOn(String id, DownloadListenerImpl listener) throws RemoteException {
+        specialListeners.put(id, listener);
+        bindServerIfNeeded();
+    }
+    public void unSubscribeOn(@Nullable String id) throws RemoteException {
+        boolean remove;
+        if (id == null) {
+            specialListeners.clear();
+            remove = true;
+        } else {
+            remove = specialListeners.remove(id) != null;
+        }
+        unBindServerIfNeeded(remove);
+    }
+    private void bindServerIfNeeded() throws RemoteException {
         if (checkNoProxy()) return;
         if (downloadBinder == null) {
+            Log.i(TAG,"bind download listener");
             DownloadListenerDefaultBinder binder = new DownloadListenerDefaultBinder();
             downloadBinder = binder;
             proxy.addDownloadListener(binder);
         }
     }
-
-    public void unRegisterDownloadListener(@NotNull DownloadListenerImpl ll) throws RemoteException {
-        boolean remove = downloadListeners.remove(ll);
-        if (remove && downloadListeners.isEmpty() && !checkNoProxy() && downloadBinder != null) {
+    private void unBindServerIfNeeded(boolean removed) throws RemoteException {
+        do {
+            if (!removed) break;
+            if (!downloadListeners.isEmpty()) break;
+            if (specialListeners.size() > 0) break;
+            if (checkNoProxy()) break;
+            if (downloadBinder == null) break;
+            Log.i(TAG,"un bind download listener");
             final DownloadListenerDefaultBinder binder = downloadBinder;
             downloadBinder = null;
             proxy.removeDownloadListener(binder);
-        }
+        } while (true);
     }
-
     public List<Download> getDownloads() throws RemoteException {
         if (checkNoProxy()) return new ArrayList<>();
         List<Download> list = proxy.getDownloads();
@@ -186,6 +216,9 @@ public final class DownloadClient implements ServiceConnection {
             for (int i = 0; i < downloadListeners.size(); i++) {
                 downloadListeners.get(i).onProgress(request, percent, downloadSpeed);
             }
+            if (specialListeners.containsKey(request.id)) {
+                Objects.requireNonNull(specialListeners.get(request.id)).onProgress(request, percent, downloadSpeed);
+            }
         }
 
         @Override
@@ -193,12 +226,18 @@ public final class DownloadClient implements ServiceConnection {
             for (int i = 0; i < downloadListeners.size(); i++) {
                 downloadListeners.get(i).onDownloadChanged(download);
             }
+            if (specialListeners.containsKey(download.request.id)) {
+                Objects.requireNonNull(specialListeners.get(download.request.id)).onDownloadChanged(download);
+            }
         }
 
         @Override
         public void onDownloadRemoved(Download download) throws RemoteException {
             for (int i = 0; i < downloadListeners.size(); i++) {
                 downloadListeners.get(i).onDownloadRemoved(download);
+            }
+            if (specialListeners.containsKey(download.request.id)) {
+                Objects.requireNonNull(specialListeners.get(download.request.id)).onDownloadRemoved(download);
             }
         }
     }

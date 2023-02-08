@@ -50,7 +50,7 @@ class SecondFragment : Fragment() {
             findNavController().navigate(R.id.action_SecondFragment_to_FirstFragment)
         }
         binding.buttonFresh.setOnClickListener {
-            vvv.aaa()
+            vvv.aaa(vvv.downloads.value?.getOrNull(0)?.request?.id)
         }
         binding.listDownload.apply {
             layoutManager =

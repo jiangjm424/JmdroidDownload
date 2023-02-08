@@ -43,9 +43,11 @@ class SecondRemodel(application: Application) : AndroidViewModel(application),
 
     }
 
-    fun aaa() {
+    fun aaa(id:String?) {
 //        downloads.value = download.downloads
 //        download.registerDownloadListener(lll)
+        id?:return
+        download.subscribeOn(id, SubscribeDownloadListenerImp(id))
     }
 
     init {
@@ -71,5 +73,6 @@ class SecondRemodel(application: Application) : AndroidViewModel(application),
         super.onCleared()
         Log.i(TAG,"second vm onclear")
         download.unRegisterDownloadListener(lll)
+        download.unSubscribeOn(null)
     }
 }

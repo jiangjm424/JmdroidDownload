@@ -1422,7 +1422,7 @@ public final class DownloadManager {
         if (isRemove) {
           downloader.remove();
         } else {
-            int errorCount = 0;
+          int errorCount = 0;
           long errorPosition = C.LENGTH_UNSET;
           while (!isCanceled) {
             try {
