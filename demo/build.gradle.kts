@@ -23,6 +23,7 @@ setupAppModule {
 
 dependencies {
     implementation(projects.download)
+    implementation(projects.netstate)
     implementation("io.github.jiangjm424:view-db:+")
 //    implementation("io.github.jiangjm424:download:+")
     implementation(libs.androidx.core)

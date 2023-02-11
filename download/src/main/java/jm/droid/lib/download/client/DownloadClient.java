@@ -59,7 +59,7 @@ public final class DownloadClient implements ServiceConnection {
 
     private @State int mState = STATE_DISCONNECTED;
 
-    private Context mContext;
+    private final Context mContext;
     private IDownloadManager proxy;
 
     private DownloadListenerDefaultBinder downloadBinder = null;
@@ -122,6 +122,10 @@ public final class DownloadClient implements ServiceConnection {
     public void subscribeOn(String id, DownloadListenerImpl listener) throws RemoteException {
         specialListeners.put(id, listener);
         bindServerIfNeeded();
+    }
+
+    public void unSubscribeOn() throws RemoteException {
+        unSubscribeOn(null);
     }
     public void unSubscribeOn(@Nullable String id) throws RemoteException {
         boolean remove;
@@ -200,6 +204,7 @@ public final class DownloadClient implements ServiceConnection {
     @Override
     public void onBindingDied(ComponentName name) {
         ServiceConnection.super.onBindingDied(name);
+        Log.i(TAG,"on binding died");
     }
 
     @Override

@@ -4,3 +4,4 @@ enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 rootProject.name="JmdroidDownload"
 include(":demo")
 include(":download")
+include(":netstate")

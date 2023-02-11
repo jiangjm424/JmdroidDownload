@@ -73,6 +73,6 @@ class SecondRemodel(application: Application) : AndroidViewModel(application),
         super.onCleared()
         Log.i(TAG,"second vm onclear")
         download.unRegisterDownloadListener(lll)
-        download.unSubscribeOn(null)
+        download.unSubscribeOn()
     }
 }

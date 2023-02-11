@@ -24,7 +24,6 @@ public class DownloadServiceNative extends IDownloadManager.Stub implements Down
     private final static String TAG = "DownloadServiceNative";
 
     private final CopyOnWriteArrayList<IDownloadListener> listeners = new CopyOnWriteArrayList<>();
-    private final ConcurrentHashMap<String,IDownloadListener> specialListeners = new ConcurrentHashMap<>();
     private final DownloadManager downloadManager;
 
     public DownloadServiceNative(DownloadManager dm) {

@@ -14,6 +14,7 @@ import jm.droid.lib.download.client.DownloadClient
 import jm.droid.lib.download.client.DownloadListenerImpl
 import jm.droid.lib.download.offline.Download
 import jm.droid.lib.download.offline.DownloadHelper
+import jm.droid.lib.netstate.NetworkStateObserver
 
 /**
  * A simple [Fragment] subclass as the default destination in the navigation.
@@ -90,6 +91,12 @@ class FirstFragment : Fragment() {
             downloadClient.downloads.forEach {
                 Log.i("jiang","display name:${it.request.id}")
             }
+        }
+        NetworkStateObserver.getInstance(requireContext()).register {
+            Log.i("jiang", "net type:$it")
+        }
+        jm.droid.lib.download.util.NetworkTypeObserver.getInstance(requireContext()).register {
+            Log.i("jiang222", "net type:$it")
         }
     }
     private var iii = 0;
