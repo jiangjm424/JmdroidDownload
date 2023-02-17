@@ -61,7 +61,7 @@ public final class NetworkStateObserver {
     }
 
     @Nullable
-    private static NetworkStateObserver staticInstance;
+    private static volatile NetworkStateObserver staticInstance;
 
     private final Handler mainHandler;
     // This class needs to hold weak references as it doesn't require listeners to unregister.
@@ -76,9 +76,11 @@ public final class NetworkStateObserver {
      *
      * @param context A {@link Context}.
      */
-    public static synchronized NetworkStateObserver getInstance(Context context) {
+    public static NetworkStateObserver getInstance(Context context) {
         if (staticInstance == null) {
-            staticInstance = new NetworkStateObserver(context);
+            synchronized (NetworkStateObserver.class) {
+                if (staticInstance == null) staticInstance = new NetworkStateObserver(context);
+            }
         }
         return staticInstance;
     }
@@ -92,6 +94,7 @@ public final class NetworkStateObserver {
         mainHandler = new Handler(Looper.getMainLooper());
         listeners = new CopyOnWriteArrayList<>();
         networkStateLock = new Object();
+        updateNetworkState();
         if (Util.SDK_INT >= Build.VERSION_CODES.N) {
             registerNetworkCallbackV24(appContext);
         } else {
