@@ -45,6 +45,7 @@ public final class DownloadRequest implements Parcelable {
   public static class Builder {
     private final String id;
     private final Uri uri;
+    private int type = -1;
     @Nullable private String displayName;
     @Nullable private List<StreamKey> streamKeys;
     @Nullable private String path;
@@ -84,10 +85,15 @@ public final class DownloadRequest implements Parcelable {
       return this;
     }
 
+    public Builder setType(int type) {
+        this.type = type;
+        return this;
+    }
     public DownloadRequest build() {
       return new DownloadRequest(
           id,
           uri,
+          type,
           displayName,
           streamKeys != null ? streamKeys : new ArrayList<>(),
           path,
@@ -99,6 +105,12 @@ public final class DownloadRequest implements Parcelable {
   public final @NotNull String id;
   /** The uri being downloaded. */
   public final Uri uri;
+
+  /**
+   * 下载分类，业务自己分类使用
+   */
+  public final int type;
+
   /**
    * The MIME type of this content. Used as a hint to infer the content's type (DASH, HLS,
    * SmoothStreaming). If null, a {@code DownloadService} will infer the content type from the
@@ -126,12 +138,14 @@ public final class DownloadRequest implements Parcelable {
   private DownloadRequest(
       @NotNull String id,
       Uri uri,
+      int type,
       @Nullable String displayName,
       List<StreamKey> streamKeys,
       @Nullable String path,
       @Nullable byte[] data) {
     this.id = id;
     this.uri = uri;
+    this.type = type;
     this.displayName = displayName;
     ArrayList<StreamKey> mutableKeys = new ArrayList<>(streamKeys);
     Collections.sort(mutableKeys);
@@ -143,6 +157,7 @@ public final class DownloadRequest implements Parcelable {
   /* package */ DownloadRequest(Parcel in) {
     id = castNonNull(in.readString());
     uri = Uri.parse(castNonNull(in.readString()));
+    type = in.readInt();
     displayName = in.readString();
     int streamKeyCount = in.readInt();
     ArrayList<StreamKey> mutableStreamKeys = new ArrayList<>(streamKeyCount);
@@ -164,7 +179,7 @@ public final class DownloadRequest implements Parcelable {
    * @return The copy with the specified ID.
    */
   public DownloadRequest copyWithId(String id) {
-    return new DownloadRequest(id, uri, displayName, streamKeys, path, data);
+    return new DownloadRequest(id, uri, type, displayName, streamKeys, path, data);
   }
 
   /**
@@ -196,6 +211,7 @@ public final class DownloadRequest implements Parcelable {
     return new DownloadRequest(
         id,
         uri,
+        type,
         displayName,
         mergedKeys,
         path,
@@ -226,6 +242,7 @@ public final class DownloadRequest implements Parcelable {
   public final int hashCode() {
     int result = 31 * id.hashCode();
     result = 31 * result + uri.hashCode();
+    result = 31 * result + type;
     result = 31 * result + (displayName != null ? displayName.hashCode() : 0);
     result = 31 * result + streamKeys.hashCode();
     result = 31 * result + (path != null ? path.hashCode() : 0);
@@ -244,6 +261,7 @@ public final class DownloadRequest implements Parcelable {
   public void writeToParcel(Parcel dest, int flags) {
     dest.writeString(id);
     dest.writeString(uri.toString());
+    dest.writeInt(type);
     dest.writeString(displayName);
     dest.writeInt(streamKeys.size());
     for (int i = 0; i < streamKeys.size(); i++) {

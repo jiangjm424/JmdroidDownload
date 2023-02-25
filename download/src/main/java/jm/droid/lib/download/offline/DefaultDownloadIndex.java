@@ -62,6 +62,7 @@ public final class DefaultDownloadIndex implements WritableDownloadIndex {
   private static final String COLUMN_FAILURE_REASON = "failure_reason";
   private static final String COLUMN_PERCENT_DOWNLOADED = "percent_downloaded";
   private static final String COLUMN_BYTES_DOWNLOADED = "bytes_downloaded";
+  private static final String COLUMN_TYPE = "type";
 
   private static final int COLUMN_INDEX_ID = 0;
   private static final int COLUMN_INDEX_DISPLAY_NAME = 1;
@@ -77,8 +78,10 @@ public final class DefaultDownloadIndex implements WritableDownloadIndex {
   private static final int COLUMN_INDEX_FAILURE_REASON = 11;
   private static final int COLUMN_INDEX_PERCENT_DOWNLOADED = 12;
   private static final int COLUMN_INDEX_BYTES_DOWNLOADED = 13;
+  private static final int COLUMN_INDEX_TYPE = 14;
 
   private static final String WHERE_ID_EQUALS = COLUMN_ID + " = ?";
+  private static final String WHERE_TYPE_EQUALS = COLUMN_TYPE + " = ?";
   private static final String WHERE_PATH_EQUALS = COLUMN_PATH + " = ?";
   private static final String WHERE_STATE_IS_DOWNLOADING =
       COLUMN_STATE + " = " + Download.STATE_DOWNLOADING;
@@ -100,7 +103,8 @@ public final class DefaultDownloadIndex implements WritableDownloadIndex {
         COLUMN_STOP_REASON,
         COLUMN_FAILURE_REASON,
         COLUMN_PERCENT_DOWNLOADED,
-        COLUMN_BYTES_DOWNLOADED
+        COLUMN_BYTES_DOWNLOADED,
+        COLUMN_TYPE
       };
 
   private static final String TABLE_SCHEMA =
@@ -132,6 +136,8 @@ public final class DefaultDownloadIndex implements WritableDownloadIndex {
           + COLUMN_PERCENT_DOWNLOADED
           + " REAL NOT NULL,"
           + COLUMN_BYTES_DOWNLOADED
+          + " INTEGER NOT NULL,"
+          + COLUMN_TYPE
           + " INTEGER NOT NULL)";
 
   private static final String TRUE = "1";
@@ -340,6 +346,7 @@ public final class DefaultDownloadIndex implements WritableDownloadIndex {
     values.put(COLUMN_FAILURE_REASON, download.failureReason);
     values.put(COLUMN_PERCENT_DOWNLOADED, download.getPercentDownloaded());
     values.put(COLUMN_BYTES_DOWNLOADED, download.getBytesDownloaded());
+    values.put(COLUMN_TYPE, download.request.type);
     database.replaceOrThrow(tableName, /* nullColumnHack= */ null, values);
   }
 
